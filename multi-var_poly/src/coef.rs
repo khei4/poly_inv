@@ -104,7 +104,7 @@ TODO: Debug trait
 */
 
 #[derive(Clone, PartialEq, Eq, PartialOrd)]
-struct LinExp {
+pub struct LinExp {
     terms: Vec<ParTerm>,
 }
 
@@ -140,6 +140,11 @@ impl std::ops::Add<LinExp> for LinExp {
             }
         }
         self
+    }
+}
+impl std::ops::AddAssign<LinExp> for LinExp {
+    fn add_assign(&mut self, rhs: LinExp) {
+        *self = self.clone() + rhs;
     }
 }
 
@@ -228,6 +233,7 @@ pub trait Coef:
     + std::cmp::PartialOrd
     + std::ops::Add<Self, Output = Self>
     + std::ops::Add<f64, Output = Self>
+    + std::ops::AddAssign<Self>
     + std::ops::AddAssign<f64>
     // LinExp multiplication is mock
     + std::ops::Mul<Self, Output = Self>
