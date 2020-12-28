@@ -1,25 +1,13 @@
 #[derive(Debug, Clone)]
 struct Pred {
-    p: Polynomial<F>,
+    p: Poly,
     eq: bool, // true == '=', false == '≠'
-}
-
-// unused, (only one variable is supported)
-#[derive(Debug, Clone, Copy)]
-struct Var {
-    sym: char, // true == '=', false == '≠'
-}
-
-impl Var {
-    fn new(c: char) -> Var {
-        Var { sym: c }
-    }
 }
 
 enum Expr {
     Ass {
         lv: Var,
-        rv: Polynomial<F>,
+        rv: Poly,
     },
     Skip,
     Seq {
