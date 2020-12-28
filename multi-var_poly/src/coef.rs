@@ -103,13 +103,14 @@ Linear Expressions of Parameter (by Vec)
 TODO: Debug trait
 */
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd)]
 struct LinExp {
     terms: Vec<ParTerm>,
 }
 
 impl From<Vec<ParTerm>> for LinExp {
-    fn from(terms: Vec<ParTerm>) -> Self {
+    fn from(mut terms: Vec<ParTerm>) -> Self {
+        terms.sort();
         LinExp { terms }
     }
 }
@@ -167,6 +168,15 @@ impl std::ops::AddAssign<f64> for LinExp {
     }
 }
 
+impl std::ops::Mul<LinExp> for LinExp {
+    type Output = LinExp;
+
+    fn mul(mut self, other: LinExp) -> Self::Output {
+        unreachable!();
+        self
+    }
+}
+
 impl std::ops::Mul<f64> for LinExp {
     type Output = LinExp;
 
@@ -186,13 +196,24 @@ impl std::ops::MulAssign<f64> for LinExp {
         *self = self.clone() * rhs;
     }
 }
+
+impl std::fmt::Debug for LinExp {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "LinExp debug is uninplemented!")
+    }
+}
+
 #[test]
 fn linexp_ops_test() {
     let three = ParTerm::one() * 3.;
 
     let threea = ParTerm::from(Par::new('a')) * 3.;
     let onec = ParTerm::from(Par::new('c'));
-    // LinExp::
+    let le = LinExp::from(vec![three, threea, onec]);
+    // TODO: test
+    le.clone() + le.clone();
+    le * 8.;
+
     // assert!(c < a);
     // assert!(a < z);
 }
@@ -203,11 +224,17 @@ fn linexp_ops_test() {
 
 pub trait Coef:
     Clone
+    + std::cmp::PartialEq
+    + std::cmp::PartialOrd
     + std::ops::Add<Self, Output = Self>
     + std::ops::Add<f64, Output = Self>
     + std::ops::AddAssign<f64>
+    // LinExp multiplication is mock
+    + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<f64, Output = Self>
     + std::ops::MulAssign<f64>
+    + std::fmt::Debug
+    
 {
     fn zero() -> Self;
     fn one() -> Self;
