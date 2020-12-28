@@ -15,11 +15,11 @@ Variables
 use super::coef::*;
 
 #[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
-struct Var {
+pub struct Var {
     sym: char,
 }
 impl Var {
-    fn new(c: char) -> Var {
+    pub fn new(c: char) -> Var {
         Var { sym: c }
     }
 }
@@ -39,8 +39,8 @@ use std::collections::HashMap;
 #[derive(PartialEq, Clone)]
 pub struct Mon<T: Coef> {
     // Var and Deg
-    vars: HashMap<Var, usize>,
-    coef: T,
+    pub vars: HashMap<Var, usize>,
+    pub coef: T,
 }
 
 impl<T: Coef> std::fmt::Debug for Mon<T> {
@@ -76,7 +76,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
 
 impl<T: Coef> Mon<T> {
     // constantは, 変数
-    fn one() -> Mon<T> {
+    pub fn one() -> Mon<T> {
         Mon {
             vars: HashMap::new(),
             coef: T::one(),
@@ -84,7 +84,7 @@ impl<T: Coef> Mon<T> {
     }
 
     // 番兵用/ zero
-    fn zero() -> Mon<T> {
+    pub fn zero() -> Mon<T> {
         Mon {
             vars: HashMap::new(),
             coef: T::zero(),
