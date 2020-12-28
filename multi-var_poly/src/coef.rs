@@ -1,5 +1,5 @@
 /*
-Coefficients
+Parameters
 */
 
 // 辞書式
@@ -21,6 +21,11 @@ impl std::fmt::Debug for Par {
 }
 
 // TODO: sortがガバガバぽい
+
+/*
+Parameter Terms
+TODO: Debug trait
+*/
 
 #[derive(Clone, Copy, PartialEq)]
 struct ParTerm {
@@ -93,7 +98,10 @@ fn parterm_ord_test() {
     assert!(a < z);
 }
 
-// Linear Parameter expressions
+/*
+Linear Expressions of Parameter (by Vec)
+TODO: Debug trait
+*/
 
 #[derive(Clone)]
 struct LinExp {
@@ -190,16 +198,7 @@ fn linexp_ops_test() {
 }
 
 /*
-Coefficients trait
-Polenomial -> floating point number
-Template -> Linear expressions of parameters
 
-Required
-
-- zero
-- one
-- Multiplication to f64 (LinExp * LinExp doesn't happen)
-- Addition of each other
 */
 
 pub trait Coef:
@@ -236,7 +235,3 @@ impl Coef for f64 {
         1.
     }
 }
-
-/*
-Monomials
-*/
