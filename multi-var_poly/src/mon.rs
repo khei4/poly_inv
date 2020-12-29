@@ -66,7 +66,11 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                 }
                 resv.sort();
                 for (v, d) in resv {
-                    res = format!("{}{}{}", res, v.sym, d);
+                    if *d != 1 {
+                        res = format!("{}{}{}", res, v.sym, d);
+                    } else {
+                        res = format!("{}{}", res, v.sym);
+                    }
                 }
             }
         }
@@ -101,9 +105,19 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     }
 }
 
-impl<T: Coef> std::ops::Mul<Mon<T>> for Mon<T> {
+// TODO: Parameterを, 0varとusizeから一意に決めなきゃいけない(Ringで管理する)
+impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
+    fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
+        Mon {
+            vars: pm.1,
+            coef: LinExp::from(pm.0),
+        }
+    }
+}
+
+impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
     type Output = Mon<T>;
-    fn mul(mut self, rhs: Mon<T>) -> Self::Output {
+    fn mul(mut self, rhs: Mon<f64>) -> Self::Output {
         let mut n: Mon<T> = Mon::one();
         // if LinExp multiplied, program crushes
         n.coef = self.coef * rhs.coef;
@@ -119,7 +133,7 @@ impl<T: Coef> std::ops::Mul<Mon<T>> for Mon<T> {
         n
     }
 }
-// scalar multiplication
+
 impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     type Output = Mon<T>;
     fn mul(mut self, rhs: f64) -> Self::Output {
@@ -131,8 +145,8 @@ impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     }
 }
 
-impl<T: Coef> std::ops::MulAssign<Mon<T>> for Mon<T> {
-    fn mul_assign(&mut self, rhs: Mon<T>) {
+impl std::ops::MulAssign<Mon<f64>> for Mon<f64> {
+    fn mul_assign(&mut self, rhs: Mon<f64>) {
         *self = self.clone() * rhs;
     }
 }

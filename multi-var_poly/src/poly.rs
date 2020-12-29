@@ -3,7 +3,7 @@ use super::mon::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Poly {
-    mons: Vec<Reverse<Mon<f64>>>,
+    pub mons: Vec<Reverse<Mon<f64>>>,
 }
 
 // display, debug
@@ -12,9 +12,9 @@ impl std::fmt::Debug for Poly {
         let mut res = format!("{:?}", self.mons[0]);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > 0. {
-                res = format!("{}+{:?}", res, self.mons[i]);
+                res = format!("{}+{:?}", res, self.mons[i].0);
             } else {
-                res = format!("{}-{:?}", res, self.mons[i]);
+                res = format!("{}{:?}", res, self.mons[i].0);
             }
         }
         write!(f, "{}", res)
@@ -22,7 +22,6 @@ impl std::fmt::Debug for Poly {
 }
 
 // constructers
-
 impl From<Vec<Mon<f64>>> for Poly {
     fn from(a: Vec<Mon<f64>>) -> Self {
         let mut mons = vec![];
@@ -41,7 +40,6 @@ impl Poly {
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<f64>::zero());
-        self.mons.push(dm.clone());
         // 0を追加して, 最後にまとめて消す
         self.mons.sort();
         for i in 1..self.mons.len() {
