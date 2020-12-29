@@ -6,9 +6,9 @@ pub struct Temp {
     mons: Vec<Reverse<Mon<LinExp>>>,
 }
 
+// TODO: implement
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        // TODO: Change
         let mut res = format!("{:?}", self.mons[0]);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef >= LinExp::zero() {
@@ -81,34 +81,33 @@ impl std::ops::AddAssign<Temp> for Temp {
     }
 }
 
-// #[test]
-// fn check_Temp_addition() {
-//     use std::collections::HashMap;
-//     let x: Var = Var::new('x');
-//     let y = Var::new('y');
-//     let z = Var::new('z');
+#[test]
+fn check_Temp_addition() {
+    use std::collections::HashMap;
+    let x: Var = Var::new('x');
+    let y = Var::new('y');
+    let z = Var::new('z');
 
-//     let mut md1 = HashMap::new();
-//     md1.insert(x, 2);
-//     let mut md2 = HashMap::new();
-//     md2.insert(x, 1);
-//     md2.insert(y, 1);
-//     let mut md3 = HashMap::new();
-//     md3.insert(y, 2);
-//     let mut md4 = HashMap::new();
-//     md4.insert(y, 1);
-//     md4.insert(z, 1);
+    let mut md1 = HashMap::new();
+    md1.insert(x, 2);
+    let mut md2 = HashMap::new();
+    md2.insert(x, 1);
+    md2.insert(y, 1);
+    let mut md3 = HashMap::new();
+    md3.insert(y, 2);
+    let mut md4 = HashMap::new();
+    md4.insert(y, 1);
+    md4.insert(z, 1);
 
-//     let yz: Mon<f64> = Mon::from(md4);
-//     let x2: Mon<f64> = Mon::from(md1);
-//     let xy: Mon<f64> = Mon::from(md2);
-//     let y2: Mon<f64> = Mon::from(md3);
-//     assert!(xy > yz);
-//     let one: Mon<f64> = Mon::one();
-//     let p1 = Temp::from(vec![x2, yz, one.clone() * 12.]);
-//     let p2 = Temp::from(vec![xy, y2, one * 9.]);
-//     let mut a = p1 + p2;
-//     println!("{:?}", a);
-//     a.sort_sumup();
-//     println!("{:?}", a);
-// }
+    let yz: Mon<LinExp> = Mon::from((Par::new('a'), md4));
+    let x2: Mon<LinExp> = Mon::from((Par::new('b'), md1));
+    let xy: Mon<LinExp> = Mon::from((Par::new('c'), md2));
+    let y2: Mon<LinExp> = Mon::from((Par::new('d'), md3));
+    assert!(xy > yz);
+    let p1 = Temp::from(vec![x2, xy.clone(), yz, y2.clone()]);
+    let p2 = Temp::from(vec![xy, y2]);
+    let mut a = p1 + p2;
+    println!("{:?}", a);
+    a.sort_sumup();
+    println!("{:?}", a);
+}
