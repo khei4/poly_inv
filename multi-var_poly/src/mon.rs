@@ -115,10 +115,10 @@ impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     }
 }
 
-impl<T: Coef> std::ops::Mul<Mon<T>> for Mon<T> {
-    type Output = Mon<T>;
-    fn mul(mut self, rhs: Mon<T>) -> Self::Output {
-        let mut n: Mon<T> = Mon::one();
+impl std::ops::Mul<Mon<f64>> for Mon<f64> {
+    type Output = Mon<f64>;
+    fn mul(mut self, rhs: Mon<f64>) -> Self::Output {
+        let mut n: Mon<f64> = Mon::one();
         // if LinExp multiplied, program crushes
         n.coef = self.coef * rhs.coef;
         for (v, d) in rhs.vars {
@@ -133,7 +133,7 @@ impl<T: Coef> std::ops::Mul<Mon<T>> for Mon<T> {
         n
     }
 }
-// scalar multiplication
+
 impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     type Output = Mon<T>;
     fn mul(mut self, rhs: f64) -> Self::Output {
@@ -145,8 +145,8 @@ impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     }
 }
 
-impl<T: Coef> std::ops::MulAssign<Mon<T>> for Mon<T> {
-    fn mul_assign(&mut self, rhs: Mon<T>) {
+impl std::ops::MulAssign<Mon<f64>> for Mon<f64> {
+    fn mul_assign(&mut self, rhs: Mon<f64>) {
         *self = self.clone() * rhs;
     }
 }
