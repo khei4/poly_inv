@@ -105,7 +105,7 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     }
 }
 
-// TODO: Parameterを, 0varとusizeから一意に決めなきゃいけない
+// TODO: Parameterを, 0varとusizeから一意に決めなきゃいけない(Ringで管理する)
 impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
         Mon {
@@ -115,10 +115,10 @@ impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     }
 }
 
-impl std::ops::Mul<Mon<f64>> for Mon<f64> {
-    type Output = Mon<f64>;
+impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
+    type Output = Mon<T>;
     fn mul(mut self, rhs: Mon<f64>) -> Self::Output {
-        let mut n: Mon<f64> = Mon::one();
+        let mut n: Mon<T> = Mon::one();
         // if LinExp multiplied, program crushes
         n.coef = self.coef * rhs.coef;
         for (v, d) in rhs.vars {
