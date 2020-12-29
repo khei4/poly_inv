@@ -4,12 +4,12 @@ Parameters
 
 // 辞書式
 #[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
-struct Par {
+pub struct Par {
     sym: char,
 }
 
 impl Par {
-    fn new(c: char) -> Par {
+    pub fn new(c: char) -> Par {
         Par { sym: c }
     }
 }
@@ -28,16 +28,20 @@ TODO: Debug trait
 */
 
 #[derive(Clone, Copy, PartialEq)]
-struct ParTerm {
+pub struct ParTerm {
     par: Option<Par>,
     coef: f64,
 }
 
 impl std::fmt::Debug for ParTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = if self.coef == 1. {String::new()} else {format!("{}", self.coef)};
+        let mut res = if self.coef == 1. {
+            String::new()
+        } else {
+            format!("{}", self.coef)
+        };
         if !self.is_cnst() {
-            res.push_str(&format!("{:?}",self.par.expect("par debug failed")));
+            res.push_str(&format!("{:?}", self.par.expect("par debug failed")));
         }
         write!(f, "{}", res)
     }
@@ -119,9 +123,6 @@ pub struct LinExp {
     terms: Vec<ParTerm>,
 }
 
-
-
-
 impl std::fmt::Debug for LinExp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.terms[0]);
@@ -132,8 +133,7 @@ impl std::fmt::Debug for LinExp {
                 res = format!("{}{:?}", res, self.terms[i]);
             }
         }
-        write!(f, "{}", res)
-        
+        write!(f, "({})", res)
     }
 }
 
@@ -167,6 +167,13 @@ impl From<Vec<ParTerm>> for LinExp {
         LinExp { terms }
     }
 }
+impl From<Par> for LinExp {
+    fn from(p: Par) -> Self {
+        LinExp {
+            terms: vec![ParTerm::from(p)],
+        }
+    }
+}
 
 impl std::ops::Add<LinExp> for LinExp {
     type Output = LinExp;
@@ -175,7 +182,7 @@ impl std::ops::Add<LinExp> for LinExp {
         // 結合して, ソートする
         let z = ParTerm::zero();
         self.terms.extend(other.terms);
-        self.terms.sort_by(|x,y| y.cmp(&x));
+        self.terms.sort_by(|x, y| y.cmp(&x));
         for i in 1..self.terms.len() {
             if self.terms[i - 1] <= self.terms[i] && self.terms[i] <= self.terms[i - 1] {
                 self.terms[i - 1].coef += self.terms[i].coef;
@@ -185,7 +192,7 @@ impl std::ops::Add<LinExp> for LinExp {
                 self.terms[i] = z;
             }
         }
-        self.terms.sort_by(|x,y| y.cmp(&x));
+        self.terms.sort_by(|x, y| y.cmp(&x));
         while let Some(m) = self.terms.pop() {
             if m != z {
                 self.terms.push(m);
@@ -227,15 +234,6 @@ impl std::ops::AddAssign<f64> for LinExp {
     }
 }
 
-impl std::ops::Mul<LinExp> for LinExp {
-    type Output = LinExp;
-
-    fn mul(mut self, other: LinExp) -> Self::Output {
-        unreachable!();
-        self
-    }
-}
-
 impl std::ops::Mul<f64> for LinExp {
     type Output = LinExp;
 
@@ -256,22 +254,19 @@ impl std::ops::MulAssign<f64> for LinExp {
     }
 }
 
-
 #[test]
 fn linexp_ops_test() {
-
     let threea = ParTerm::from(Par::new('a')) * 3.;
-    let twob = ParTerm::from(Par::new('b')) ;
+    let twob = ParTerm::from(Par::new('b'));
     let onec = ParTerm::from(Par::new('c'));
-    let le1 = LinExp::from(vec![ threea,twob * -1., onec]);
-    let le2 = LinExp::from(vec![ twob, onec]);
-    // TODO: 
+    let le1 = LinExp::from(vec![threea, twob * -1., onec]);
+    let le2 = LinExp::from(vec![twob, onec]);
+    // TODO:
     println!("{:?}", le1);
-    println!("{:?}", le1.clone()*9.);
-    println!("{:?}", le1.clone()*0.);
+    println!("{:?}", le1.clone() * 9.);
+    println!("{:?}", le1.clone() * 0.);
     let les = le1 + le2;
     println!("{:?}", les);
-
 }
 
 /*
@@ -286,12 +281,9 @@ pub trait Coef:
     + std::ops::Add<f64, Output = Self>
     + std::ops::AddAssign<Self>
     + std::ops::AddAssign<f64>
-    // LinExp multiplication is mock
-    + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<f64, Output = Self>
     + std::ops::MulAssign<f64>
     + std::fmt::Debug
-    
 {
     fn zero() -> Self;
     fn one() -> Self;
