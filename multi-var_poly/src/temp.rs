@@ -5,7 +5,8 @@ use super::ring::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
-    mons: Vec<Reverse<Mon<LinExp>>>,
+    pub mons: Vec<Reverse<Mon<LinExp>>>,
+    pub r: Option<std::rc::Rc<Ring>>,
 }
 
 impl std::fmt::Debug for Temp {
@@ -29,7 +30,7 @@ impl From<Vec<Mon<LinExp>>> for Temp {
         for m in a {
             mons.push(Reverse(m));
         }
-        let mut p = Temp { mons };
+        let mut p = Temp { mons, r: None };
         p.sort_sumup();
         p
     }

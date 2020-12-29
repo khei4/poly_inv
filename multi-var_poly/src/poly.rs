@@ -4,6 +4,7 @@ use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Poly {
     pub mons: Vec<Reverse<Mon<f64>>>,
+    pub r: Option<std::rc::Rc<Ring>>,
 }
 
 // display, debug
@@ -28,7 +29,7 @@ impl From<Vec<Mon<f64>>> for Poly {
         for m in a {
             mons.push(Reverse(m));
         }
-        let mut p = Poly { mons };
+        let mut p = Poly { mons, r: None };
         p.sort_sumup();
         p
     }
