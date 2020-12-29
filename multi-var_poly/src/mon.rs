@@ -66,7 +66,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                 }
                 resv.sort();
                 for (v, d) in resv {
-                    if d != 1 {
+                    if *d != 1 {
                         res = format!("{}{}{}", res, v.sym, d);
                     } else {
                         res = format!("{}{}", res, v.sym);
