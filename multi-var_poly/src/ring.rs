@@ -1,33 +1,33 @@
 #[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
 pub struct Var {
-    pub sym: char,
+    pub id: char,
 }
 impl Var {
     pub fn new(c: char) -> Var {
-        Var { sym: c }
+        Var { id: c }
     }
 }
 
 impl std::fmt::Debug for Var {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.sym)
+        write!(f, "{}", self.id)
     }
 }
 
 #[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
 pub struct Par {
-    pub sym: char,
+    pub id: usize,
 }
 
 impl Par {
-    pub fn new(c: char) -> Par {
-        Par { sym: c }
+    pub fn new(c: usize) -> Par {
+        Par { id: c }
     }
 }
 
 impl std::fmt::Debug for Par {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.sym)
+        write!(f, "a[{}]", self.id)
     }
 }
 use std::cell::RefCell;

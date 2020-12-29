@@ -88,8 +88,8 @@ impl std::ops::MulAssign<f64> for ParTerm {
 #[test]
 fn parterm_ord_test() {
     // ParTermのオーダーは辞書順
-    let a = ParTerm::from(Par::new('a'));
-    let c = ParTerm::from(Par::new('c'));
+    let a = ParTerm::from(Par::new(0));
+    let c = ParTerm::from(Par::new(2));
     let a = a * 8.;
     assert!(a < c);
 }
@@ -237,9 +237,9 @@ impl std::ops::MulAssign<f64> for LinExp {
 
 #[test]
 fn linexp_ops_test() {
-    let threea = ParTerm::from(Par::new('a')) * 3.;
-    let twob = ParTerm::from(Par::new('b'));
-    let onec = ParTerm::from(Par::new('c'));
+    let threea = ParTerm::from(Par::new(0)) * 3.;
+    let twob = ParTerm::from(Par::new(1));
+    let onec = ParTerm::from(Par::new(2));
     let le1 = LinExp::from(vec![threea, twob * -1., onec]);
     let le2 = LinExp::from(vec![twob, onec]);
     // TODO:

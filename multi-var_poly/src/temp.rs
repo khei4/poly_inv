@@ -39,9 +39,8 @@ impl Temp {
         for i in 0..d + 1 {
             for c in v.iter().combinations_with_replacement(i) {
                 // これはケッコーやばい
-                let newchar = (b'a' + cnt as u8) as char;
+                let fp = Par::new(cnt);
                 cnt += 1;
-                let fp = Par::new(newchar);
                 fresh_pars.push(fp);
                 // varsのマップを作る
                 let mut m: HashMap<Var, usize> = std::collections::HashMap::new();
@@ -173,12 +172,12 @@ fn check_temp_addition() {
     md4.insert(y, 1);
     md4.insert(z, 1);
 
-    let yz: Mon<LinExp> = Mon::from((Par::new('a'), md4));
-    let ax2: Mon<LinExp> = Mon::from((Par::new('a'), md1.clone()));
-    let bx2: Mon<LinExp> = Mon::from((Par::new('b'), md1));
-    let cxy: Mon<LinExp> = Mon::from((Par::new('c'), md2.clone()));
-    let dxy: Mon<LinExp> = Mon::from((Par::new('d'), md2));
-    let y2: Mon<LinExp> = Mon::from((Par::new('d'), md3));
+    let yz: Mon<LinExp> = Mon::from((Par::new(0), md4));
+    let ax2: Mon<LinExp> = Mon::from((Par::new(0), md1.clone()));
+    let bx2: Mon<LinExp> = Mon::from((Par::new(1), md1));
+    let cxy: Mon<LinExp> = Mon::from((Par::new(2), md2.clone()));
+    let dxy: Mon<LinExp> = Mon::from((Par::new(3), md2));
+    let y2: Mon<LinExp> = Mon::from((Par::new(3), md3));
     assert!(cxy > yz);
     let p1 = Temp::from(vec![ax2, cxy, yz, y2.clone()]);
     let p2 = Temp::from(vec![bx2, dxy, y2]);
@@ -227,12 +226,12 @@ fn check_poly_multiplication() {
     md4.insert(z, 1);
 
     // Template Monomials
-    let yz: Mon<LinExp> = Mon::from((Par::new('a'), md4.clone()));
-    let ax2: Mon<LinExp> = Mon::from((Par::new('a'), md1.clone()));
-    let bx2: Mon<LinExp> = Mon::from((Par::new('b'), md1.clone()));
-    let cxy: Mon<LinExp> = Mon::from((Par::new('c'), md2.clone()));
-    let dxy: Mon<LinExp> = Mon::from((Par::new('d'), md2.clone()));
-    let y2: Mon<LinExp> = Mon::from((Par::new('d'), md3.clone()));
+    let yz: Mon<LinExp> = Mon::from((Par::new(0), md4.clone()));
+    let ax2: Mon<LinExp> = Mon::from((Par::new(0), md1.clone()));
+    let bx2: Mon<LinExp> = Mon::from((Par::new(1), md1.clone()));
+    let cxy: Mon<LinExp> = Mon::from((Par::new(2), md2.clone()));
+    let dxy: Mon<LinExp> = Mon::from((Par::new(3), md2.clone()));
+    let y2: Mon<LinExp> = Mon::from((Par::new(3), md3.clone()));
 
     let p1 = Temp::from(vec![ax2, cxy, yz, y2.clone()]);
 

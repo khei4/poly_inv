@@ -1,6 +1,6 @@
 use super::mon::*;
 use super::ring::*;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::rc::Rc;
 
@@ -122,7 +122,7 @@ fn check_poly_addition() {
     let p2 = Poly::from((vec![xy, y2, one * 9.], r.clone()));
     let p3 = Poly::from((vec![], r.clone()));
     println!("{:?}", p1.r);
-    p3.r.borrow_mut().pextend(vec![Par::new('1')]);
+    p3.r.borrow_mut().pextend(vec![Par::new(0)]);
     println!("{:?}", p1.r);
     assert!(p1.tdeg() == 2);
     assert!(p2.tdeg() == 2);
