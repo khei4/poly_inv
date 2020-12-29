@@ -60,8 +60,9 @@ impl Poly {
             }
         }
     }
-    // TOOO: multi-degree
-    fn mdeg() {}
+    fn tdeg(&self) -> usize {
+        self.mons[0].0.vars.iter().fold(0, |s, (_, v)| s + v)
+    }
 }
 
 impl std::ops::Add<Poly> for Poly {
@@ -105,8 +106,9 @@ fn check_poly_addition() {
     let one: Mon<f64> = Mon::one();
     let p1 = Poly::from(vec![x2, yz, one.clone() * 12.]);
     let p2 = Poly::from(vec![xy, y2, one * 9.]);
-    let mut a = p1 + p2;
-    println!("{:?}", a);
-    a.sort_sumup();
+    assert!(p1.tdeg() == 2);
+    assert!(p2.tdeg() == 2);
+    let a = p1 + p2;
+    assert!(a.tdeg() == 2);
     println!("{:?}", a);
 }

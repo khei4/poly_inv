@@ -37,7 +37,6 @@ impl From<Vec<Mon<LinExp>>> for Temp {
 }
 
 // methods
-
 impl Temp {
     fn sort_sumup(&mut self) {
         // dummy monomial
@@ -63,8 +62,9 @@ impl Temp {
             }
         }
     }
-    // TODO: multi-degree
-    fn mdeg() {}
+    fn tdeg(&self) -> usize {
+        self.mons[0].0.vars.iter().fold(0, |s, (_, v)| s + v)
+    }
 }
 
 impl std::ops::Add<Temp> for Temp {
@@ -109,10 +109,11 @@ fn check_temp_addition() {
     assert!(cxy > yz);
     let p1 = Temp::from(vec![ax2, cxy, yz, y2.clone()]);
     let p2 = Temp::from(vec![bx2, dxy, y2]);
-    let mut a = p1 + p2;
+    assert!(p1.tdeg() == 2);
+    assert!(p2.tdeg() == 2);
+    let a = p1 + p2;
     println!("{:?}", a);
-    a.sort_sumup();
-    println!("{:?}", a);
+    assert!(a.tdeg() == 2);
 }
 
 impl std::ops::Mul<Poly> for Temp {
@@ -168,7 +169,8 @@ fn check_poly_multiplication() {
     assert!(xy > yz);
     let one: Mon<f64> = Mon::one() * 12.;
     let p2 = Poly::from(vec![x2, yz, one]);
-    println!("{:?}", p1);
-    println!("{:?}", p2);
-    println!("{:?}", p1 * p2);
+    assert!(p1.tdeg() == 2);
+    let m = p1 * p2;
+    println!("{:?}", m);
+    assert!(m.tdeg() == 4);
 }
