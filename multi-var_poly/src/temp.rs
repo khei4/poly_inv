@@ -2,16 +2,18 @@ use super::coef::*;
 use super::mon::*;
 use super::poly::*;
 use super::ring::*;
+use std::cell::RefCell;
 use std::cmp::Reverse;
+use std::rc::Rc;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
     pub mons: Vec<Reverse<Mon<LinExp>>>,
-    pub r: Option<std::rc::Rc<Ring>>,
+    pub r: Option<Rc<RefCell<Ring>>>,
 }
 
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = format!("{:?}", self.mons[0]);
+        let mut res = format!("{:?}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef >= LinExp::zero() {
                 res = format!("{}+{:?}", res, self.mons[i].0);
@@ -168,7 +170,7 @@ fn check_poly_multiplication() {
     let y2: Mon<f64> = Mon::from(md3);
     assert!(xy > yz);
     let one: Mon<f64> = Mon::one() * 12.;
-    let p2 = Poly::from(vec![x2, yz, one]);
+    let p2 = Poly::from((vec![x2, yz, one], None));
     assert!(p1.tdeg() == 2);
     let m = p1 * p2;
     println!("{:?}", m);
