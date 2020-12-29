@@ -34,7 +34,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
         // constant
         let mut res: String;
         // 定数がなぜか 表示されないけどいいや
-        if self.vars.get(&Var::new('1')).is_some() || self.vars.get(&Var::new('0')).is_some() {
+        if self.is_cnst() {
             res = format!("{:?}", self.coef);
         } else {
             if T::zero() <= self.coef && self.coef != T::one() {
@@ -79,6 +79,10 @@ impl<T: Coef> Mon<T> {
             vars: HashMap::new(),
             coef: T::zero(),
         }
+    }
+
+    pub fn is_cnst(&self) -> bool {
+        self.vars.len() == 0
     }
 }
 
