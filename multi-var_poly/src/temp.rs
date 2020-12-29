@@ -6,7 +6,6 @@ pub struct Temp {
     mons: Vec<Reverse<Mon<LinExp>>>,
 }
 
-// TODO: implement
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.mons[0]);
@@ -61,7 +60,7 @@ impl Temp {
             }
         }
     }
-    // TOOO: multi-degree
+    // TODO: multi-degree
     fn mdeg() {}
 }
 
@@ -82,7 +81,7 @@ impl std::ops::AddAssign<Temp> for Temp {
 }
 
 #[test]
-fn check_Temp_addition() {
+fn check_temp_addition() {
     use std::collections::HashMap;
     let x: Var = Var::new('x');
     let y = Var::new('y');
@@ -100,12 +99,14 @@ fn check_Temp_addition() {
     md4.insert(z, 1);
 
     let yz: Mon<LinExp> = Mon::from((Par::new('a'), md4));
-    let x2: Mon<LinExp> = Mon::from((Par::new('b'), md1));
-    let xy: Mon<LinExp> = Mon::from((Par::new('c'), md2));
+    let ax2: Mon<LinExp> = Mon::from((Par::new('a'), md1.clone()));
+    let bx2: Mon<LinExp> = Mon::from((Par::new('b'), md1));
+    let cxy: Mon<LinExp> = Mon::from((Par::new('c'), md2.clone()));
+    let dxy: Mon<LinExp> = Mon::from((Par::new('d'), md2));
     let y2: Mon<LinExp> = Mon::from((Par::new('d'), md3));
-    assert!(xy > yz);
-    let p1 = Temp::from(vec![x2, xy.clone(), yz, y2.clone()]);
-    let p2 = Temp::from(vec![xy, y2]);
+    assert!(cxy > yz);
+    let p1 = Temp::from(vec![ax2, cxy, yz, y2.clone()]);
+    let p2 = Temp::from(vec![bx2, dxy, y2]);
     let mut a = p1 + p2;
     println!("{:?}", a);
     a.sort_sumup();
