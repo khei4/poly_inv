@@ -67,6 +67,16 @@ impl Poly {
     }
 }
 
+impl std::ops::Neg for Poly {
+    type Output = Poly;
+    fn neg(mut self) -> Poly {
+        for m in &mut self.mons {
+            m.0.coef *= -1.;
+        }
+        self
+    }
+}
+
 impl std::ops::Add<Poly> for Poly {
     type Output = Poly;
 
