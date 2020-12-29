@@ -1,9 +1,13 @@
+use super::mon::*;
+use super::poly::*;
+
 #[derive(Debug, Clone)]
 struct Pred {
     p: Poly,
     eq: bool, // true == '=', false == '≠'
 }
 
+#[derive(Debug, Clone)]
 enum Expr {
     Ass {
         lv: Var,

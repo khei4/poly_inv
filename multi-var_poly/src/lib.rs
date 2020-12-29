@@ -10,6 +10,9 @@ use poly::*;
 mod temp;
 use temp::*;
 
+mod expr;
+use expr::*;
+
 fn main() {}
 
 #[cfg(test)]
