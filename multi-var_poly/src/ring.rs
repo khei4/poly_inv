@@ -30,9 +30,31 @@ impl std::fmt::Debug for Par {
         write!(f, "{}", self.sym)
     }
 }
-
-#[derive(Eq, PartialEq, Clone)]
+use std::cell::RefCell;
+use std::rc::Rc;
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Ring {
-    vars: Vec<Var>,
-    pars: Vec<Par>,
+    pub vars: Vec<Var>,
+    pub pars: Vec<Par>,
+}
+
+impl Ring {
+    pub fn new(a: Vec<Var>) -> Rc<RefCell<Ring>> {
+        Rc::new(RefCell::new(Ring {
+            vars: a,
+            pars: vec![],
+        }))
+    }
+    pub fn pextend(&mut self, new_pars: Vec<Par>) {
+        self.pars.extend(new_pars);
+    }
+}
+
+impl From<Vec<Var>> for Ring {
+    fn from(a: Vec<Var>) -> Ring {
+        Ring {
+            vars: a,
+            pars: vec![],
+        }
+    }
 }
