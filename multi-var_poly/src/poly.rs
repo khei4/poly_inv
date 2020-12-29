@@ -1,12 +1,13 @@
 use super::mon::*;
 use super::ring::*;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::cmp::Reverse;
 use std::rc::Rc;
+
 #[derive(PartialEq, Clone)]
 pub struct Poly {
     pub mons: Vec<Reverse<Mon<f64>>>,
-    pub r: Option<Rc<RefCell<Ring>>>,
+    pub r: Rc<RefCell<Ring>>,
 }
 
 // display, debug
@@ -24,8 +25,8 @@ impl std::fmt::Debug for Poly {
     }
 }
 
-impl From<(Vec<Mon<f64>>, Option<Rc<RefCell<Ring>>>)> for Poly {
-    fn from(a: (Vec<Mon<f64>>, Option<Rc<RefCell<Ring>>>)) -> Self {
+impl From<(Vec<Mon<f64>>, Rc<RefCell<Ring>>)> for Poly {
+    fn from(a: (Vec<Mon<f64>>, Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
         for m in a.0 {
             mons.push(Reverse(m));
@@ -88,7 +89,7 @@ fn check_poly_addition() {
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
-    let r = Rc::new(RefCell::new(Ring::from((vars, None))));
+    let r = Rc::new(RefCell::new(Ring::from(vars)));
 
     let mut md1 = HashMap::new();
     md1.insert(x, 2);
@@ -107,11 +108,15 @@ fn check_poly_addition() {
     let y2: Mon<f64> = Mon::from(md3);
     assert!(xy > yz);
     let one: Mon<f64> = Mon::one();
-    let p1 = Poly::from((vec![x2, yz, one.clone() * 12.], Some(r.clone())));
-    let p2 = Poly::from((vec![xy, y2, one * 9.], None));
+    let p1 = Poly::from((vec![x2, yz, one.clone() * 12.], r.clone()));
+    let p2 = Poly::from((vec![xy, y2, one * 9.], r.clone()));
+    let p3 = Poly::from((vec![], r.clone()));
+    println!("{:?}", p1.r);
+    p3.r.borrow_mut().pextend(vec![Par::new('1')]);
+    println!("{:?}", p1.r);
     assert!(p1.tdeg() == 2);
     assert!(p2.tdeg() == 2);
-    let a = p1 + p2;
+    let mut a = p1 + p2;
     assert!(a.tdeg() == 2);
     println!("{:?}", a);
 }
