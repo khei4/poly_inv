@@ -66,7 +66,11 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                 }
                 resv.sort();
                 for (v, d) in resv {
-                    res = format!("{}{}{}", res, v.sym, d);
+                    if d != 1 {
+                        res = format!("{}{}{}", res, v.sym, d);
+                    } else {
+                        res = format!("{}{}", res, v.sym);
+                    }
                 }
             }
         }
@@ -97,6 +101,16 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
         Mon {
             vars: m,
             coef: T::one(),
+        }
+    }
+}
+
+// TODO: Parameterを, 0varとusizeから一意に決めなきゃいけない
+impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
+    fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
+        Mon {
+            vars: pm.1,
+            coef: LinExp::from(pm.0),
         }
     }
 }
