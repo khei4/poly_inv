@@ -12,9 +12,9 @@ impl std::fmt::Debug for Poly {
         let mut res = format!("{:?}", self.mons[0]);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > 0. {
-                res = format!("{}+{:?}", res, self.mons[i]);
+                res = format!("{}+{:?}", res, self.mons[i].0);
             } else {
-                res = format!("{}{:?}", res, self.mons[i]);
+                res = format!("{}{:?}", res, self.mons[i].0);
             }
         }
         write!(f, "{}", res)
