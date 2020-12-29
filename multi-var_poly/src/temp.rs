@@ -1,5 +1,6 @@
 use super::coef::*;
 use super::mon::*;
+use super::poly::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
@@ -79,7 +80,6 @@ impl std::ops::AddAssign<Temp> for Temp {
         *self = self.clone() + rhs;
     }
 }
-
 #[test]
 fn check_temp_addition() {
     use std::collections::HashMap;
@@ -111,4 +111,62 @@ fn check_temp_addition() {
     println!("{:?}", a);
     a.sort_sumup();
     println!("{:?}", a);
+}
+
+impl std::ops::Mul<Poly> for Temp {
+    type Output = Temp;
+    fn mul(mut self, other: Poly) -> Self::Output {
+        let mut new_terms: Vec<Reverse<Mon<LinExp>>> = vec![];
+        for m in &other.mons {
+            for tm in &self.mons {
+                new_terms.push(Reverse(tm.0.clone() * m.0.clone()))
+            }
+        }
+        self.mons = new_terms;
+        self.sort_sumup();
+        self
+    }
+}
+
+#[test]
+fn check_poly_multiplication() {
+    use std::collections::HashMap;
+    // Variables
+    let x: Var = Var::new('x');
+    let y: Var = Var::new('y');
+    let z: Var = Var::new('z');
+
+    // variable degrees
+    let mut md1 = HashMap::new();
+    md1.insert(x, 2);
+    let mut md2 = HashMap::new();
+    md2.insert(x, 1);
+    md2.insert(y, 1);
+    let mut md3 = HashMap::new();
+    md3.insert(y, 2);
+    let mut md4 = HashMap::new();
+    md4.insert(y, 1);
+    md4.insert(z, 1);
+
+    // Template Monomials
+    let yz: Mon<LinExp> = Mon::from((Par::new('a'), md4.clone()));
+    let ax2: Mon<LinExp> = Mon::from((Par::new('a'), md1.clone()));
+    let bx2: Mon<LinExp> = Mon::from((Par::new('b'), md1.clone()));
+    let cxy: Mon<LinExp> = Mon::from((Par::new('c'), md2.clone()));
+    let dxy: Mon<LinExp> = Mon::from((Par::new('d'), md2.clone()));
+    let y2: Mon<LinExp> = Mon::from((Par::new('d'), md3.clone()));
+
+    let p1 = Temp::from(vec![ax2, cxy, yz, y2.clone()]);
+
+    // Monomials
+    let yz: Mon<f64> = Mon::from(md4);
+    let x2: Mon<f64> = Mon::from(md1);
+    let xy: Mon<f64> = Mon::from(md2);
+    let y2: Mon<f64> = Mon::from(md3);
+    assert!(xy > yz);
+    let one: Mon<f64> = Mon::one() * 12.;
+    let p2 = Poly::from(vec![x2, yz, one]);
+    println!("{:?}", p1);
+    println!("{:?}", p2);
+    println!("{:?}", p1 * p2);
 }
