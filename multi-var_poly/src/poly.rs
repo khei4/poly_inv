@@ -9,7 +9,7 @@ pub struct Poly {
 // display, debug
 impl std::fmt::Debug for Poly {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = format!("{:?}", self.mons[0]);
+        let mut res = format!("{:?}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > 0. {
                 res = format!("{}+{:?}", res, self.mons[i].0);
