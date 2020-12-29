@@ -1,5 +1,6 @@
 use super::mon::*;
 use super::poly::*;
+use super::ring::*;
 
 #[derive(Debug, Clone)]
 struct Pred {

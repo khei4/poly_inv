@@ -1,5 +1,5 @@
 use super::mon::*;
-
+use super::ring::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Poly {

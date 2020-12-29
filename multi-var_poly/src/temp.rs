@@ -1,6 +1,7 @@
 use super::coef::*;
 use super::mon::*;
 use super::poly::*;
+use super::ring::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
