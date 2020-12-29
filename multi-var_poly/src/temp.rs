@@ -2,13 +2,14 @@ use super::coef::*;
 use super::mon::*;
 use super::poly::*;
 use super::ring::*;
+use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::rc::Rc;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
     pub mons: Vec<Reverse<Mon<LinExp>>>,
-    pub r: Option<Rc<RefCell<Ring>>>,
+    pub r: Rc<RefCell<Ring>>,
 }
 
 impl std::fmt::Debug for Temp {
@@ -26,13 +27,73 @@ impl std::fmt::Debug for Temp {
 }
 
 // constructers
+// varsを参照して, parsを増やして, 一般の多項式を返す
+// TODO: parametersの数がとても少ない
+use std::collections::HashMap;
+impl Temp {
+    fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
+        let v = r.borrow_mut().vars.clone();
+        let mut cnt = r.borrow().pars.len();
+        let mut fresh_pars = vec![];
+        let mut mons = vec![];
+        for i in 0..d + 1 {
+            for c in v.iter().combinations_with_replacement(i) {
+                // これはケッコーやばい
+                let newchar = (b'a' + cnt as u8) as char;
+                cnt += 1;
+                let fp = Par::new(newchar);
+                fresh_pars.push(fp);
+                // varsのマップを作る
+                let mut m: HashMap<Var, usize> = std::collections::HashMap::new();
+                for v in c {
+                    match m.get_mut(&v) {
+                        Some(d) => *d += 1,
+                        None => {
+                            m.insert(*v, 1);
+                        }
+                    }
+                }
+                mons.push(Reverse(Mon::<LinExp>::from((fp, m))))
+            }
+        }
+        Temp { mons, r }
+    }
+    // Neg
+    // fn rem_par(&self, other: Poly) -> Temp {
+    //     let diff = self.tdeg() - other.tdeg();
+    //     assert!(0 <= diff);
+    //     self
+    // }
+}
+#[test]
+fn check_most_gen() {
+    // use std::collections::HashMap;
+    let x: Var = Var::new('x');
+    let y = Var::new('y');
+    let z = Var::new('z');
+    let vars = vec![x, y, z];
+    let r = Rc::new(RefCell::new(Ring::from(vars)));
+    println!("{:?}", Temp::most_gen(2, r));
+}
+
 impl From<Vec<Mon<LinExp>>> for Temp {
     fn from(a: Vec<Mon<LinExp>>) -> Self {
+        let r = Ring::new(vec![]);
         let mut mons = vec![];
         for m in a {
+            for (k, _) in &m.vars {
+                r.borrow_mut().vars.push(*k);
+            }
+            for pt in &m.coef.terms {
+                r.borrow_mut().pars.push(pt.par.expect(""));
+            }
             mons.push(Reverse(m));
         }
-        let mut p = Temp { mons, r: None };
+        r.borrow_mut().vars.sort();
+        r.borrow_mut().vars.dedup();
+        r.borrow_mut().pars.sort();
+        r.borrow_mut().pars.dedup();
+        let mut p = Temp { mons, r };
         p.sort_sumup();
         p
     }
@@ -140,6 +201,8 @@ fn check_poly_multiplication() {
     let x: Var = Var::new('x');
     let y: Var = Var::new('y');
     let z: Var = Var::new('z');
+    let vars = vec![x, y, z];
+    let r = Rc::new(RefCell::new(Ring::from(vars)));
 
     // variable degrees
     let mut md1 = HashMap::new();
@@ -170,7 +233,7 @@ fn check_poly_multiplication() {
     let y2: Mon<f64> = Mon::from(md3);
     assert!(xy > yz);
     let one: Mon<f64> = Mon::one() * 12.;
-    let p2 = Poly::from((vec![x2, yz, one], None));
+    let p2 = Poly::from((vec![x2, yz, one], r.clone()));
     assert!(p1.tdeg() == 2);
     let m = p1 * p2;
     println!("{:?}", m);
