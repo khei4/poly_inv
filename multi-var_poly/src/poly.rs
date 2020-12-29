@@ -14,7 +14,7 @@ impl std::fmt::Debug for Poly {
             if self.mons[i].0.coef > 0. {
                 res = format!("{}+{:?}", res, self.mons[i]);
             } else {
-                res = format!("{}-{:?}", res, self.mons[i]);
+                res = format!("{}{:?}", res, self.mons[i]);
             }
         }
         write!(f, "{}", res)
@@ -22,7 +22,6 @@ impl std::fmt::Debug for Poly {
 }
 
 // constructers
-
 impl From<Vec<Mon<f64>>> for Poly {
     fn from(a: Vec<Mon<f64>>) -> Self {
         let mut mons = vec![];
