@@ -3,7 +3,7 @@ use super::mon::*;
 use std::cmp::Reverse;
 #[derive(PartialEq, Clone)]
 pub struct Poly {
-    mons: Vec<Reverse<Mon<f64>>>,
+    pub mons: Vec<Reverse<Mon<f64>>>,
 }
 
 // display, debug
@@ -40,7 +40,6 @@ impl Poly {
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<f64>::zero());
-        self.mons.push(dm.clone());
         // 0を追加して, 最後にまとめて消す
         self.mons.sort();
         for i in 1..self.mons.len() {
