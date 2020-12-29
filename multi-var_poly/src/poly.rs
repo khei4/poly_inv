@@ -62,7 +62,7 @@ impl Poly {
             }
         }
     }
-    fn tdeg(&self) -> usize {
+    pub fn tdeg(&self) -> usize {
         self.mons[0].0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 }

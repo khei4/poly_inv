@@ -56,22 +56,32 @@ impl Temp {
                 mons.push(Reverse(Mon::<LinExp>::from((fp, m))))
             }
         }
-        Temp { mons, r }
+        Temp { mons, r: r.clone() }
     }
-    // Neg
-    // fn rem_par(&self, other: Poly) -> Temp {
-    //     let diff = self.tdeg() - other.tdeg();
-    //     assert!(0 <= diff);
-    //     self
-    // }
+    fn rem_par(&self, other: Poly) -> Temp {
+        let diff = self.tdeg() - other.tdeg();
+        let q = Temp::most_gen(diff, self.r.clone());
+        q * (-other) + self.clone()
+    }
 }
 #[test]
 fn check_most_gen() {
-    // use std::collections::HashMap;
     let x: Var = Var::new('x');
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
+    let r = Rc::new(RefCell::new(Ring::from(vars)));
+    println!("{:?}", Temp::most_gen(2, r));
+}
+
+#[test]
+fn check_rem_par() {
+    let v = Var::new('v');
+    let w = Var::new('w');
+    let x: Var = Var::new('x');
+    let y = Var::new('y');
+    let z = Var::new('z');
+    let vars = vec![v, w, x, y, z];
     let r = Rc::new(RefCell::new(Ring::from(vars)));
     println!("{:?}", Temp::most_gen(2, r));
 }

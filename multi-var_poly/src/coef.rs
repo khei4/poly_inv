@@ -10,7 +10,7 @@ use super::ring::*;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct ParTerm {
-    par: Option<Par>,
+    pub par: Option<Par>,
     coef: f64,
 }
 
@@ -101,7 +101,7 @@ TODO: Debug trait
 
 #[derive(Clone, PartialEq, Eq, PartialOrd)]
 pub struct LinExp {
-    terms: Vec<ParTerm>,
+    pub terms: Vec<ParTerm>,
 }
 
 impl std::fmt::Debug for LinExp {
