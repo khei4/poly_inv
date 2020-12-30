@@ -90,7 +90,8 @@ impl Temp {
         });
     }
     fn tdeg(&self) -> usize {
-        let m = self.mons.iter().max().expect("Temp T-degree Panic");
+        // minimium == Reveresed maximum
+        let m = self.mons.iter().min().expect("Temp T-degree Panic");
         m.0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 

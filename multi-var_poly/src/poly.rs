@@ -68,7 +68,8 @@ impl Poly {
         }
     }
     pub fn tdeg(&self) -> usize {
-        self.mons[0].0.vars.iter().fold(0, |s, (_, v)| s + v)
+        let m = self.mons.iter().min().expect("Poly T-degree Panic");
+        m.0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 
     pub fn pow(&self, mut e: usize) -> Poly {
