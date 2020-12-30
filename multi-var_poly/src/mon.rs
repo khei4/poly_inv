@@ -104,9 +104,9 @@ impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     }
 }
 
-impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
+impl<T: Coef> std::ops::Mul<Mon<C>> for Mon<T> {
     type Output = Mon<T>;
-    fn mul(mut self, rhs: Mon<f64>) -> Self::Output {
+    fn mul(mut self, rhs: Mon<C>) -> Self::Output {
         let mut n: Mon<T> = Mon::one();
         // if LinExp multiplied, program crushes
         n.coef = self.coef * rhs.coef;
@@ -123,15 +123,15 @@ impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
     }
 }
 
-impl<T: Coef> std::ops::MulAssign<Mon<f64>> for Mon<T> {
-    fn mul_assign(&mut self, rhs: Mon<f64>) {
+impl<T: Coef> std::ops::MulAssign<Mon<C>> for Mon<T> {
+    fn mul_assign(&mut self, rhs: Mon<C>) {
         *self = self.clone() * rhs;
     }
 }
 
-impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
+impl<T: Coef> std::ops::Mul<C> for Mon<T> {
     type Output = Mon<T>;
-    fn mul(mut self, rhs: f64) -> Self::Output {
+    fn mul(mut self, rhs: C) -> Self::Output {
         self.coef *= rhs;
         if self.coef == T::zero() {
             self = Mon::zero();
@@ -140,8 +140,8 @@ impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     }
 }
 
-impl<T: Coef> std::ops::MulAssign<f64> for Mon<T> {
-    fn mul_assign(&mut self, rhs: f64) {
+impl<T: Coef> std::ops::MulAssign<C> for Mon<T> {
+    fn mul_assign(&mut self, rhs: C) {
         *self = self.clone() * rhs;
     }
 }
@@ -218,11 +218,11 @@ fn mon_ord_test() {
     md4.insert(y, 1);
     md4.insert(z, 1);
 
-    let x2: Mon<f64> = Mon::from(md1);
-    let xy: Mon<f64> = Mon::from(md2);
-    let y2: Mon<f64> = Mon::from(md3);
-    let yz: Mon<f64> = Mon::from(md4);
-    let eight = Mon::one() * 8.;
+    let x2: Mon<C> = Mon::from(md1);
+    let xy: Mon<C> = Mon::from(md2);
+    let y2: Mon<C> = Mon::from(md3);
+    let yz: Mon<C> = Mon::from(md4);
+    let eight = Mon::one() * Rational64::new(8, 1);
     let z = Mon::zero();
     assert!(z < eight);
     assert!(xy < x2);

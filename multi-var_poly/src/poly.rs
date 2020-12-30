@@ -1,3 +1,4 @@
+use super::coef::*;
 use super::mon::*;
 use super::ring::*;
 use std::cell::RefCell;
@@ -6,7 +7,7 @@ use std::rc::Rc;
 
 #[derive(PartialEq, Clone)]
 pub struct Poly {
-    pub mons: Vec<Reverse<Mon<f64>>>,
+    pub mons: Vec<Reverse<Mon<C>>>,
     pub r: Rc<RefCell<Ring>>,
 }
 
@@ -15,7 +16,7 @@ impl std::fmt::Debug for Poly {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.mons[0].0);
         for i in 1..self.mons.len() {
-            if self.mons[i].0.coef > 0. {
+            if self.mons[i].0.coef > C::zero() {
                 res = format!("{}+{:?}", res, self.mons[i].0);
             } else {
                 res = format!("{}{:?}", res, self.mons[i].0);
@@ -25,8 +26,8 @@ impl std::fmt::Debug for Poly {
     }
 }
 
-impl From<(Vec<Mon<f64>>, Rc<RefCell<Ring>>)> for Poly {
-    fn from(a: (Vec<Mon<f64>>, Rc<RefCell<Ring>>)) -> Self {
+impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
+    fn from(a: (Vec<Mon<C>>, Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
         for m in a.0 {
             mons.push(Reverse(m));
@@ -41,18 +42,19 @@ impl From<(Vec<Mon<f64>>, Rc<RefCell<Ring>>)> for Poly {
 
 impl Poly {
     pub fn one(r: Rc<RefCell<Ring>>) -> Poly {
-        Poly::from((vec![Mon::<f64>::one()], r))
+        Poly::from((vec![Mon::<C>::one()], r))
     }
     fn sort_sumup(&mut self) {
         // dummy monomial
-        let dm = Reverse(Mon::<f64>::zero());
+        let dm = Reverse(Mon::<C>::zero());
         // 0を追加して, 最後にまとめて消す
         self.mons.sort();
         for i in 1..self.mons.len() {
             if !(self.mons[i - 1] > self.mons[i]) && !(self.mons[i - 1] < self.mons[i]) {
-                self.mons[i - 1].0.coef += self.mons[i].0.coef;
+                let c = self.mons[i].0.coef;
+                self.mons[i - 1].0.coef += c;
                 self.mons[i] = dm.clone();
-                if self.mons[i - 1].0.coef == 0. {
+                if self.mons[i - 1].0.coef == C::zero() {
                     self.mons[i - 1] = dm.clone();
                 }
             }
@@ -102,12 +104,12 @@ fn check_poly_pow() {
     md4.insert(y, 1);
     md4.insert(z, 1);
 
-    let yz: Mon<f64> = Mon::from(md4);
-    let x2: Mon<f64> = Mon::from(md1);
-    let xy: Mon<f64> = Mon::from(md2);
-    let y2: Mon<f64> = Mon::from(md3);
+    let yz: Mon<C> = Mon::from(md4);
+    let x2: Mon<C> = Mon::from(md1);
+    let xy: Mon<C> = Mon::from(md2);
+    let y2: Mon<C> = Mon::from(md3);
     assert!(xy > yz);
-    let one: Mon<f64> = Mon::one();
+    let one: Mon<C> = Mon::one();
     let p1 = Poly::from((vec![x2], r.clone()));
     println!("{:?}", p1.pow(5));
 }
@@ -116,7 +118,7 @@ impl std::ops::Neg for Poly {
     type Output = Poly;
     fn neg(mut self) -> Poly {
         for m in &mut self.mons {
-            m.0.coef *= -1.;
+            m.0.coef *= -C::one();
         }
         self
     }
@@ -181,14 +183,14 @@ fn check_poly_addition() {
     md4.insert(y, 1);
     md4.insert(z, 1);
 
-    let yz: Mon<f64> = Mon::from(md4);
-    let x2: Mon<f64> = Mon::from(md1);
-    let xy: Mon<f64> = Mon::from(md2);
-    let y2: Mon<f64> = Mon::from(md3);
+    let yz: Mon<C> = Mon::from(md4);
+    let x2: Mon<C> = Mon::from(md1);
+    let xy: Mon<C> = Mon::from(md2);
+    let y2: Mon<C> = Mon::from(md3);
     assert!(xy > yz);
-    let one: Mon<f64> = Mon::one();
-    let p1 = Poly::from((vec![x2, yz, one.clone() * 12.], r.clone()));
-    let p2 = Poly::from((vec![xy, y2, one * 9.], r.clone()));
+    let one: Mon<C> = Mon::one();
+    let p1 = Poly::from((vec![x2, yz, one.clone() * C::new(12, 1)], r.clone()));
+    let p2 = Poly::from((vec![xy, y2, one * C::new(9, 1)], r.clone()));
     let p3 = Poly::from((vec![], r.clone()));
     println!("{:?}", p1.r);
     p3.r.borrow_mut().pextend(vec![Par::new(0)]);

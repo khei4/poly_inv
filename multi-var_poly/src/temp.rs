@@ -205,12 +205,12 @@ fn check_poly_substitution() {
     assert!(cxy > yz);
     let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
     // Monomials
-    let yz: Mon<f64> = Mon::from(md4);
-    let x2: Mon<f64> = Mon::from(md1);
-    let xy: Mon<f64> = Mon::from(md2);
-    let y2: Mon<f64> = Mon::from(md3);
+    let yz: Mon<C> = Mon::from(md4);
+    let x2: Mon<C> = Mon::from(md1);
+    let xy: Mon<C> = Mon::from(md2);
+    let y2: Mon<C> = Mon::from(md3);
     assert!(xy > yz);
-    let one: Mon<f64> = Mon::one() * 12.;
+    let one: Mon<C> = Mon::one() * C::new(12, 1);
     let p2 = Poly::from((vec![x2, yz, one], r.clone()));
     assert!(p1.tdeg() == 2);
     println!("{:?} subs {:?} to {:?} ", p1, x, p2);
@@ -323,12 +323,12 @@ fn check_poly_multiplication() {
     assert!(cxy > yz);
     let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
     // Monomials
-    let yz: Mon<f64> = Mon::from(md4);
-    let x2: Mon<f64> = Mon::from(md1);
-    let xy: Mon<f64> = Mon::from(md2);
-    let y2: Mon<f64> = Mon::from(md3);
+    let yz: Mon<C> = Mon::from(md4);
+    let x2: Mon<C> = Mon::from(md1);
+    let xy: Mon<C> = Mon::from(md2);
+    let y2: Mon<C> = Mon::from(md3);
     assert!(xy > yz);
-    let one: Mon<f64> = Mon::one() * 12.;
+    let one: Mon<C> = Mon::one() * C::new(12, 1);
     let p2 = Poly::from((vec![x2, yz, one], r.clone()));
     assert!(p1.tdeg() == 2);
     let m = p1 * p2;

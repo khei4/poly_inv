@@ -7,9 +7,9 @@ Parameter Terms
 */
 
 use super::ring::*;
-use num_rational::Rational64;
-use num_traits::identities::{One, Zero};
-type C = Rational64;
+pub use num_rational::Rational64;
+pub use num_traits::identities::{One, Zero};
+pub type C = Rational64;
 #[derive(Clone, Copy, PartialEq)]
 pub struct ParTerm {
     pub par: Option<Par>,
@@ -127,7 +127,8 @@ impl LinExp {
         self.terms.sort();
         for i in 1..self.terms.len() {
             if !(self.terms[i - 1] > self.terms[i]) && !(self.terms[i - 1] < self.terms[i]) {
-                self.terms[i - 1].coef += self.terms[i].coef;
+                let c = self.terms[i].coef;
+                self.terms[i - 1].coef += c;
                 self.terms[i] = z;
                 if self.terms[i - 1].coef == Rational64::zero() {
                     self.terms[i - 1] = z;
@@ -168,7 +169,8 @@ impl std::ops::Add<LinExp> for LinExp {
         self.terms.sort_by(|x, y| y.cmp(&x));
         for i in 1..self.terms.len() {
             if self.terms[i - 1] <= self.terms[i] && self.terms[i] <= self.terms[i - 1] {
-                self.terms[i - 1].coef += self.terms[i].coef;
+                let c = self.terms[i].coef;
+                self.terms[i - 1].coef += c;
                 if self.terms[i - 1].coef == Rational64::zero() {
                     self.terms[i - 1] = z;
                 }
@@ -220,7 +222,7 @@ impl std::ops::AddAssign<C> for LinExp {
 impl std::ops::Mul<LinExp> for LinExp {
     type Output = LinExp;
 
-    fn mul(mut self, other: LinExp) -> Self::Output {
+    fn mul(self, _other: LinExp) -> Self::Output {
         unreachable!();
         // self
     }
