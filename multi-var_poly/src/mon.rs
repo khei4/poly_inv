@@ -12,23 +12,9 @@ TODO:
 Variables
 */
 // mod coef;
+
 use super::coef::*;
-
-#[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
-pub struct Var {
-    sym: char,
-}
-impl Var {
-    pub fn new(c: char) -> Var {
-        Var { sym: c }
-    }
-}
-
-impl std::fmt::Debug for Var {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.sym)
-    }
-}
+use super::ring::*;
 
 /*
 Monomials
@@ -47,8 +33,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // constant
         let mut res: String;
-        // 定数がなぜか 表示されないけどいいや
-        if self.vars.get(&Var::new('1')).is_some() || self.vars.get(&Var::new('0')).is_some() {
+        if self.is_cnst() {
             res = format!("{:?}", self.coef);
         } else {
             if T::zero() <= self.coef && self.coef != T::one() {
@@ -67,9 +52,9 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                 resv.sort();
                 for (v, d) in resv {
                     if *d != 1 {
-                        res = format!("{}{}{}", res, v.sym, d);
+                        res = format!("{}{}{}", res, v.id, d);
                     } else {
-                        res = format!("{}{}", res, v.sym);
+                        res = format!("{}{}", res, v.id);
                     }
                 }
             }
@@ -93,6 +78,10 @@ impl<T: Coef> Mon<T> {
             vars: HashMap::new(),
             coef: T::zero(),
         }
+    }
+
+    pub fn is_cnst(&self) -> bool {
+        self.vars.len() == 0
     }
 }
 
@@ -134,6 +123,12 @@ impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
     }
 }
 
+impl<T: Coef> std::ops::MulAssign<Mon<f64>> for Mon<T> {
+    fn mul_assign(&mut self, rhs: Mon<f64>) {
+        *self = self.clone() * rhs;
+    }
+}
+
 impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     type Output = Mon<T>;
     fn mul(mut self, rhs: f64) -> Self::Output {
@@ -145,8 +140,8 @@ impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     }
 }
 
-impl std::ops::MulAssign<Mon<f64>> for Mon<f64> {
-    fn mul_assign(&mut self, rhs: Mon<f64>) {
+impl<T: Coef> std::ops::MulAssign<f64> for Mon<T> {
+    fn mul_assign(&mut self, rhs: f64) {
         *self = self.clone() * rhs;
     }
 }
