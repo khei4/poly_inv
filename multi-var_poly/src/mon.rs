@@ -33,7 +33,6 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         // constant
         let mut res: String;
-        // 定数がなぜか 表示されないけどいいや
         if self.is_cnst() {
             res = format!("{:?}", self.coef);
         } else {
@@ -124,6 +123,12 @@ impl<T: Coef> std::ops::Mul<Mon<f64>> for Mon<T> {
     }
 }
 
+impl<T: Coef> std::ops::MulAssign<Mon<f64>> for Mon<T> {
+    fn mul_assign(&mut self, rhs: Mon<f64>) {
+        *self = self.clone() * rhs;
+    }
+}
+
 impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     type Output = Mon<T>;
     fn mul(mut self, rhs: f64) -> Self::Output {
@@ -135,8 +140,8 @@ impl<T: Coef> std::ops::Mul<f64> for Mon<T> {
     }
 }
 
-impl std::ops::MulAssign<Mon<f64>> for Mon<f64> {
-    fn mul_assign(&mut self, rhs: Mon<f64>) {
+impl<T: Coef> std::ops::MulAssign<f64> for Mon<T> {
+    fn mul_assign(&mut self, rhs: f64) {
         *self = self.clone() * rhs;
     }
 }
