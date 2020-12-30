@@ -7,16 +7,18 @@ Parameter Terms
 */
 
 use super::ring::*;
-
+use num_rational::Rational64;
+use num_traits::identities::{One, Zero};
+type C = Rational64;
 #[derive(Clone, Copy, PartialEq)]
 pub struct ParTerm {
     pub par: Option<Par>,
-    coef: f64,
+    coef: C,
 }
 
 impl std::fmt::Debug for ParTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = if self.coef == 1. {
+        let mut res = if self.coef == Rational64::one() {
             String::new()
         } else {
             format!("{}", self.coef)
@@ -34,13 +36,13 @@ impl ParTerm {
     fn zero() -> Self {
         ParTerm {
             par: None,
-            coef: 0.,
+            coef: Rational64::zero(),
         }
     }
     fn one() -> Self {
         ParTerm {
             par: None,
-            coef: 1.,
+            coef: Rational64::one(),
         }
     }
     fn is_cnst(self) -> bool {
@@ -52,7 +54,7 @@ impl From<Par> for ParTerm {
     fn from(par: Par) -> Self {
         ParTerm {
             par: Some(par),
-            coef: 1.,
+            coef: Rational64::one(),
         }
     }
 }
@@ -70,17 +72,17 @@ impl std::cmp::Ord for ParTerm {
     }
 }
 
-impl std::ops::Mul<f64> for ParTerm {
+impl std::ops::Mul<C> for ParTerm {
     type Output = ParTerm;
 
-    fn mul(mut self, other: f64) -> Self::Output {
+    fn mul(mut self, other: C) -> Self::Output {
         self.coef *= other;
         self
     }
 }
 
-impl std::ops::MulAssign<f64> for ParTerm {
-    fn mul_assign(&mut self, rhs: f64) {
+impl std::ops::MulAssign<C> for ParTerm {
+    fn mul_assign(&mut self, rhs: C) {
         *self = self.clone() * rhs;
     }
 }
@@ -90,7 +92,7 @@ fn parterm_ord_test() {
     // ParTermのオーダーは辞書順
     let a = ParTerm::from(Par::new(0));
     let c = ParTerm::from(Par::new(2));
-    let a = a * 8.;
+    let a = a * Rational64::new(8, 1);
     assert!(a < c);
 }
 
@@ -108,7 +110,7 @@ impl std::fmt::Debug for LinExp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.terms[0]);
         for i in 1..self.terms.len() {
-            if self.terms[i].coef > 0. {
+            if self.terms[i].coef > Rational64::zero() {
                 res = format!("{}+{:?}", res, self.terms[i]);
             } else {
                 res = format!("{}{:?}", res, self.terms[i]);
@@ -127,7 +129,7 @@ impl LinExp {
             if !(self.terms[i - 1] > self.terms[i]) && !(self.terms[i - 1] < self.terms[i]) {
                 self.terms[i - 1].coef += self.terms[i].coef;
                 self.terms[i] = z;
-                if self.terms[i - 1].coef == 0. {
+                if self.terms[i - 1].coef == Rational64::zero() {
                     self.terms[i - 1] = z;
                 }
             }
@@ -167,7 +169,7 @@ impl std::ops::Add<LinExp> for LinExp {
         for i in 1..self.terms.len() {
             if self.terms[i - 1] <= self.terms[i] && self.terms[i] <= self.terms[i - 1] {
                 self.terms[i - 1].coef += self.terms[i].coef;
-                if self.terms[i - 1].coef == 0. {
+                if self.terms[i - 1].coef == Rational64::zero() {
                     self.terms[i - 1] = z;
                 }
                 self.terms[i] = z;
@@ -190,15 +192,15 @@ impl std::ops::AddAssign<LinExp> for LinExp {
     }
 }
 
-impl std::ops::Add<f64> for LinExp {
+impl std::ops::Add<C> for LinExp {
     type Output = LinExp;
 
-    fn add(mut self, other: f64) -> Self::Output {
+    fn add(mut self, other: C) -> Self::Output {
         let a = ParTerm::one() * other;
         if let Some(l) = self.terms.last_mut() {
             if *l >= a {
                 l.coef += other;
-                if l.coef == 0. {
+                if l.coef == Rational64::zero() {
                     self.terms.pop();
                 }
             } else {
@@ -209,17 +211,26 @@ impl std::ops::Add<f64> for LinExp {
     }
 }
 
-impl std::ops::AddAssign<f64> for LinExp {
-    fn add_assign(&mut self, rhs: f64) {
+impl std::ops::AddAssign<C> for LinExp {
+    fn add_assign(&mut self, rhs: C) {
         *self = self.clone() + rhs;
     }
 }
 
-impl std::ops::Mul<f64> for LinExp {
+impl std::ops::Mul<LinExp> for LinExp {
     type Output = LinExp;
 
-    fn mul(mut self, other: f64) -> Self::Output {
-        if other == 0. {
+    fn mul(mut self, other: LinExp) -> Self::Output {
+        unreachable!();
+        // self
+    }
+}
+
+impl std::ops::Mul<C> for LinExp {
+    type Output = LinExp;
+
+    fn mul(mut self, other: C) -> Self::Output {
+        if other == Rational64::zero() {
             LinExp::zero()
         } else {
             for t in &mut self.terms {
@@ -229,23 +240,23 @@ impl std::ops::Mul<f64> for LinExp {
         }
     }
 }
-impl std::ops::MulAssign<f64> for LinExp {
-    fn mul_assign(&mut self, rhs: f64) {
+impl std::ops::MulAssign<C> for LinExp {
+    fn mul_assign(&mut self, rhs: C) {
         *self = self.clone() * rhs;
     }
 }
 
 #[test]
 fn linexp_ops_test() {
-    let threea = ParTerm::from(Par::new(0)) * 3.;
+    let threea = ParTerm::from(Par::new(0)) * Rational64::new(3, 1);
     let twob = ParTerm::from(Par::new(1));
     let onec = ParTerm::from(Par::new(2));
-    let le1 = LinExp::from(vec![threea, twob * -1., onec]);
+    let le1 = LinExp::from(vec![threea, twob * Rational64::new(-1, 1), onec]);
     let le2 = LinExp::from(vec![twob, onec]);
     // TODO:
     println!("{:?}", le1);
-    println!("{:?}", le1.clone() * 9.);
-    println!("{:?}", le1.clone() * 0.);
+    println!("{:?}", le1.clone() * Rational64::new(9, 1));
+    println!("{:?}", le1.clone() * Rational64::zero());
     let les = le1 + le2;
     println!("{:?}", les);
 }
@@ -259,36 +270,38 @@ pub trait Coef:
     + std::cmp::PartialEq
     + std::cmp::PartialOrd
     + std::ops::Add<Self, Output = Self>
-    + std::ops::Add<f64, Output = Self>
+    + std::ops::Add<C, Output = Self>
     + std::ops::AddAssign<Self>
-    + std::ops::AddAssign<f64>
-    + std::ops::Mul<f64, Output = Self>
-    + std::ops::MulAssign<f64>
+    + std::ops::AddAssign<C>
+    + std::ops::Mul<Self, Output = Self>
+    + std::ops::Mul<C, Output = Self>
+    + std::ops::MulAssign<C>
     + std::fmt::Debug
+    + One
+    + Zero
 {
-    fn zero() -> Self;
-    fn one() -> Self;
 }
 
-impl Coef for LinExp {
+impl One for LinExp {
     fn one() -> LinExp {
         LinExp {
             terms: vec![ParTerm::one()],
         }
     }
+}
+
+impl Zero for LinExp {
     fn zero() -> LinExp {
         LinExp {
             terms: vec![ParTerm::zero()],
         }
     }
-}
 
-impl Coef for f64 {
-    fn zero() -> f64 {
-        0.
-    }
-
-    fn one() -> f64 {
-        1.
+    fn is_zero(&self) -> bool {
+        self.terms.len() == 1 && self.terms[0] == ParTerm::zero()
     }
 }
+
+impl Coef for LinExp {}
+
+impl Coef for C {}
