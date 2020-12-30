@@ -74,6 +74,17 @@ impl<T: Coef> Mon<T> {
     }
 }
 
+impl<T: Coef> From<Var> for Mon<T> {
+    fn from(v: Var) -> Self {
+        let mut m = HashMap::new();
+        m.insert(v, 1);
+        Mon {
+            vars: m,
+            coef: T::one(),
+        }
+    }
+}
+
 impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     fn from(m: HashMap<Var, usize>) -> Self {
         Mon {
@@ -83,7 +94,6 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     }
 }
 
-// TODO: Parameterを, 0varとusizeから一意に決めなきゃいけない(Ringで管理する)
 impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
         Mon {
