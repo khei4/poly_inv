@@ -7,6 +7,7 @@ Parameter Terms
 */
 
 use super::ring::*;
+// BigIntにすると, ParTermがCopyじゃなくなる
 pub use num_rational::Rational64;
 pub use num_traits::identities::{One, Zero};
 pub type C = Rational64;
