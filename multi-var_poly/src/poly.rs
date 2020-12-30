@@ -14,6 +14,7 @@ pub struct Poly {
 // display, debug
 impl std::fmt::Debug for Poly {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        println!("{:?}", self.mons.len());
         let mut res = format!("{:?}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > C::zero() {
@@ -36,6 +37,12 @@ impl Poly {
     }
 }
 
+#[test]
+fn test_zero() {
+    let r = Ring::new(vec![]);
+    println!("{:?}", Poly::zero(r.clone()));
+}
+
 impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
     fn from(a: (Vec<Mon<C>>, Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
@@ -51,6 +58,9 @@ impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
 // methods
 
 impl Poly {
+    pub fn is_zero(&self) -> bool {
+        self.mons[0].0 == Mon::zero()
+    }
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<C>::zero());
@@ -72,6 +82,10 @@ impl Poly {
                 self.mons.push(m);
                 break;
             }
+        }
+
+        if self.mons.len() == 0 {
+            self.mons.push(dm);
         }
     }
     pub fn tdeg(&self) -> usize {

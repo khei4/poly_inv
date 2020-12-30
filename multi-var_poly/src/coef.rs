@@ -19,13 +19,13 @@ pub struct ParTerm {
 
 impl std::fmt::Debug for ParTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = if self.coef == C::one() {
-            String::new()
+        let res;
+        if self.is_cnst() {
+            res = format!("{}", self.coef);
+        } else if self.coef == C::one() {
+            res = format!("{:?}", self.par.expect("par debug failed"));
         } else {
-            format!("{}", self.coef)
-        };
-        if !self.is_cnst() {
-            res.push_str(&format!("{:?}", self.par.expect("par debug failed")));
+            res = format!("{}{:?}", self.coef, self.par.expect("par debug failed"));
         }
         write!(f, "{}", res)
     }
@@ -110,11 +110,13 @@ pub struct LinExp {
 impl std::fmt::Debug for LinExp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.terms[0]);
-        for i in 1..self.terms.len() {
-            if self.terms[i].coef > C::zero() {
-                res = format!("{}+{:?}", res, self.terms[i]);
-            } else {
-                res = format!("{}{:?}", res, self.terms[i]);
+        if !self.is_cnst() {
+            for i in 1..self.terms.len() {
+                if self.terms[i].coef > C::zero() {
+                    res = format!("{}+{:?}", res, self.terms[i]);
+                } else {
+                    res = format!("{}{:?}", res, self.terms[i]);
+                }
             }
         }
         write!(f, "({})", res)
@@ -125,7 +127,7 @@ impl LinExp {
     fn sort_sumup(&mut self) {
         // 0を追加して, 最後にまとめて消す
         let z = ParTerm::zero();
-        self.terms.sort();
+        self.terms.sort_by(|x, y| y.cmp(&x));
         for i in 1..self.terms.len() {
             if !(self.terms[i - 1] > self.terms[i]) && !(self.terms[i - 1] < self.terms[i]) {
                 let c = self.terms[i].coef;
@@ -136,16 +138,41 @@ impl LinExp {
                 }
             }
         }
-        self.terms.sort();
+        self.terms.sort_by(|x, y| y.cmp(&x));
         while let Some(m) = self.terms.pop() {
             if m != z {
                 self.terms.push(m);
                 break;
             }
         }
+        if self.terms.len() == 0 {
+            self.terms.push(z);
+        }
+    }
+    fn is_cnst(&self) -> bool {
+        self.terms.len() == 1 && self.terms[0].par.is_none()
     }
 }
 
+impl One for LinExp {
+    fn one() -> LinExp {
+        LinExp {
+            terms: vec![ParTerm::one()],
+        }
+    }
+}
+
+impl Zero for LinExp {
+    fn zero() -> LinExp {
+        LinExp {
+            terms: vec![ParTerm::zero()],
+        }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.terms.len() == 1 && self.terms[0] == ParTerm::zero()
+    }
+}
 impl From<Vec<ParTerm>> for LinExp {
     fn from(mut terms: Vec<ParTerm>) -> Self {
         terms.sort();
@@ -262,6 +289,11 @@ fn linexp_ops_test() {
     println!("{:?}", le1.clone() * C::zero());
     let les = le1 + le2;
     println!("{:?}", les);
+
+    // zero and one
+    assert!(LinExp::zero() + les.clone() == les.clone());
+    assert!(les.clone() + LinExp::zero() == les.clone());
+    assert!(LinExp::one() + LinExp::zero() == LinExp::one());
 }
 
 /*
@@ -283,26 +315,6 @@ pub trait Coef:
     + One
     + Zero
 {
-}
-
-impl One for LinExp {
-    fn one() -> LinExp {
-        LinExp {
-            terms: vec![ParTerm::one()],
-        }
-    }
-}
-
-impl Zero for LinExp {
-    fn zero() -> LinExp {
-        LinExp {
-            terms: vec![ParTerm::zero()],
-        }
-    }
-
-    fn is_zero(&self) -> bool {
-        self.terms.len() == 1 && self.terms[0] == ParTerm::zero()
-    }
 }
 
 impl Coef for LinExp {}

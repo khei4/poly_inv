@@ -30,6 +30,8 @@ impl std::fmt::Debug for Par {
         write!(f, "a[{}]", self.id)
     }
 }
+
+// TODO: vars, ParをMapで持つ
 use std::cell::RefCell;
 use std::rc::Rc;
 #[derive(Eq, PartialEq, Clone, Debug)]

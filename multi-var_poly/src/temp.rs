@@ -41,6 +41,15 @@ impl Temp {
         }
     }
 }
+
+#[test]
+fn zero_is_identity_of_add() {
+    let r = Ring::new(vec![]);
+    assert!(Temp::one(r.clone()) + Temp::zero(r.clone()) == Temp::one(r.clone()));
+    assert!(Temp::zero(r.clone()) + Temp::one(r.clone()) == Temp::one(r.clone()));
+    assert!(Temp::zero(r.clone()) + Temp::zero(r.clone()) == Temp::zero(r.clone()));
+}
+
 // construct Temp with extend Rings
 impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
     fn from(a: (Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)) -> Self {
@@ -49,12 +58,18 @@ impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
         // TODO: parametersをSetにする.
         for m in a {
             for pt in &m.coef.terms {
-                r.borrow_mut().pars.push(pt.par.expect(""));
+                match pt.par {
+                    Some(p) => r.borrow_mut().pars.push(p),
+                    None => (),
+                }
             }
             mons.push(Reverse(m));
         }
         r.borrow_mut().pars.sort();
         r.borrow_mut().pars.dedup();
+        if mons.len() == 0 {
+            mons.push(Reverse(Mon::zero()));
+        }
         let mut p = Temp { mons, r };
         p.sort_sumup();
         p
@@ -63,6 +78,9 @@ impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
 
 // methods
 impl Temp {
+    fn is_zero(&self) -> bool {
+        self.mons[0].0 == Mon::zero()
+    }
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<LinExp>::zero());
@@ -70,6 +88,10 @@ impl Temp {
         // 0を追加して, 最後にまとめて消す
         self.mons.sort();
         for i in 1..self.mons.len() {
+            // TODO: 突貫工事, どこかで生じる空リスト係数をなくせ
+            if self.mons[i].0.coef.terms.len() == 0 {
+                self.mons[i] = dm.clone();
+            }
             if !(self.mons[i - 1] > self.mons[i]) && !(self.mons[i - 1] < self.mons[i]) {
                 let c = self.mons[i].0.coef.clone();
                 self.mons[i - 1].0.coef += c;
@@ -86,8 +108,11 @@ impl Temp {
                 break;
             }
         }
+        if self.mons.len() == 0 {
+            self.mons.push(dm);
+        }
     }
-    // x に関しての降順でソート
+    // x に関しての昇順でソート
     fn sort_by_var(&mut self, v: Var) {
         self.mons.sort_by(|m1, m2| {
             m1.0.vars
@@ -138,7 +163,6 @@ impl Temp {
     }
 
     fn subs(mut self, v: Var, other: Poly) -> Temp {
-        // vに関して昇順でソート
         self.sort_by_var(v);
         let mut res = Temp::zero(self.r.clone());
         let mut base = Poly::one(self.r.clone());
@@ -154,7 +178,6 @@ impl Temp {
                 }
                 None => (),
             }
-            // TODO: Temp(Poly) * Mon<LinExp>
             res += Temp::from((vec![m.0.clone()], self.r.clone())) * base.clone();
         }
         res
@@ -180,16 +203,37 @@ impl std::ops::AddAssign<Temp> for Temp {
 impl std::ops::Mul<Poly> for Temp {
     type Output = Temp;
     fn mul(mut self, other: Poly) -> Self::Output {
-        let mut new_terms: Vec<Reverse<Mon<LinExp>>> = vec![];
-        for m in &other.mons {
-            for tm in &self.mons {
-                new_terms.push(Reverse(tm.0.clone() * m.0.clone()))
+        if other.is_zero() || self.is_zero() {
+            Temp::zero(self.r.clone())
+        } else {
+            let mut new_terms: Vec<Reverse<Mon<LinExp>>> = vec![];
+            for m in &other.mons {
+                for tm in &self.mons {
+                    new_terms.push(Reverse(tm.0.clone() * m.0.clone()))
+                }
+            }
+            if new_terms.len() == 0 {
+                Temp::zero(self.r.clone())
+            } else {
+                self.mons = new_terms;
+                self.sort_sumup();
+                self
             }
         }
-        self.mons = new_terms;
-        self.sort_sumup();
-        self
     }
+}
+
+#[test]
+fn one_id_of_mul_zero_is_zero() {
+    let r = Ring::new(vec![]);
+    assert!(Temp::one(r.clone()) * Poly::zero(r.clone()) == Temp::zero(r.clone()));
+    println!("T 1 * P 0 = T 0");
+    assert!(Temp::zero(r.clone()) * Poly::one(r.clone()) == Temp::zero(r.clone()));
+    println!("T 0 * P 1 = T 0");
+    assert!(Temp::one(r.clone()) * Poly::one(r.clone()) == Temp::one(r.clone()));
+    println!("T 1 * P 1 = T 1");
+    assert!(Temp::zero(r.clone()) * Poly::zero(r.clone()) == Temp::zero(r.clone()));
+    println!("T 0 * P 0 = T 0");
 }
 
 impl std::ops::MulAssign<Poly> for Temp {
@@ -241,6 +285,10 @@ mod tests {
         */
 
         let p1 = p1 + p2;
+
+        assert!(p1.clone() == p1.clone() + Temp::zero(r.clone()));
+        assert!(p1.clone() == Temp::zero(r.clone()) + p1.clone());
+
         // Monomials, Polynomials
         let yz: Mon<C> = Mon::from(md4);
         let x2: Mon<C> = Mon::from(md1);
@@ -248,6 +296,10 @@ mod tests {
         let y2: Mon<C> = Mon::from(md3);
         let twelve: Mon<C> = Mon::one() * C::new(12, 1);
         let p2 = Poly::from((vec![x2, yz, xy, y2, twelve], r.clone()));
+
+        /*
+            Multiplication test
+        */
         assert!(p1.tdeg() == 2);
         let m = p1 * p2;
         println!("{:?}", m);
@@ -307,48 +359,115 @@ mod tests {
     fn check_mannadiv_poly() {
         use std::collections::HashMap;
         // Init Ring
-        let x: Var = Var::new('x');
-        let y = Var::new('y');
-        let z = Var::new('z');
-        let r = Ring::new(vec![x, y, z]);
-        // Init Monomial Dic
+        // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
+        let x1 = Var::new('v');
+        let x2 = Var::new('w');
+        let y1 = Var::new('x');
+        let y2 = Var::new('y');
+        let y3 = Var::new('z');
+
+        let r = Ring::new(vec![x1, x2, y1, y2, y3]);
+        // Init Invariant (Template)
+        // y1*x2 + y2 + y3 - x1 = 0
         let mut md1 = HashMap::new();
-        md1.insert(x, 2);
+        md1.insert(y1, 1);
+        md1.insert(x2, 1);
         let mut md2 = HashMap::new();
-        md2.insert(x, 1);
-        md2.insert(y, 1);
+        md2.insert(y2, 1);
         let mut md3 = HashMap::new();
-        md3.insert(y, 2);
+        md3.insert(y3, 1);
         let mut md4 = HashMap::new();
-        md4.insert(y, 1);
-        md4.insert(z, 1);
+        md4.insert(x1, 1);
 
-        // Init Template by
-        /*
-            Most Generic Template
-        */
-        let p1 = Temp::most_gen(2, r.clone());
-        // 3 variable, 2 degree => 4H2 == 5C2 == 10
-        assert!(r.as_ref().borrow().pars.len() == 10);
-        println!("{:?}", p1);
-        assert!(p1.tdeg() == 2);
+        let m1: Mon<LinExp> = Mon::from(md1);
+        let m2: Mon<LinExp> = Mon::from(md2);
+        let m3: Mon<LinExp> = Mon::from(md3);
+        let m4: Mon<LinExp> = Mon::from(md4) * -C::one();
+        let g_inv = Temp::from((vec![m1, m2, m3, m4], r.clone()));
 
-        // Monomials
-        let yz: Mon<C> = Mon::from(md4);
-        let x2: Mon<C> = Mon::from(md1);
-        let xy: Mon<C> = Mon::from(md2);
-        let y2: Mon<C> = Mon::from(md3);
-        let twelve: Mon<C> = Mon::one() * C::new(12, 1);
-        let p2 = Poly::from((vec![x2, yz, y2, twelve], r.clone()));
+        // guard polynomial
+        // p = x2-y2-1
+        let mut md1 = HashMap::new();
+        md1.insert(x2, 1);
+        let mut md2 = HashMap::new();
+        md2.insert(y2, 1);
+        let m1: Mon<C> = Mon::from(md1);
+        let m2: Mon<C> = Mon::from(md2) * -C::one();
+        let n_one: Mon<C> = Mon::one() * -C::one();
+        let p = Poly::from((vec![m1, m2, n_one], r.clone()));
 
-        /*
-            Substitution Test
-        */
-        println!("{:?} subs {:?} to {:?} ", p1, x, p2);
-        println!("{:?}", p1.subs(x, p2));
+        // subs poly pcxyVn => cx's y-th substitution to Vn variable
+        let mut m = HashMap::new();
+        m.insert(y1, 1);
+        let pc11y1 = Poly::from((vec![Mon::from(m), Mon::one()], r.clone()));
+        let pc12y2 = Poly::zero(r.clone());
+        let mut m = HashMap::new();
+        m.insert(y3, 1);
+        let pc13y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
+        let mut m = HashMap::new();
+        m.insert(y2, 1);
+        let pc21y2 = Poly::from((vec![Mon::from(m), Mon::one()], r.clone()));
+        let mut m = HashMap::new();
+        m.insert(y3, 1);
+        let pc22y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
+        let c1g = {
+            let subs1 = {
+                let subs2 = {
+                    let subs3 = g_inv.clone().subs(y3, pc13y3);
+                    subs3.subs(y2, pc12y2)
+                };
+                subs2.subs(y1, pc11y1)
+            };
+            subs1
+        };
+        println!("c1g{:?}", c1g);
+        println!("g_inv{:?}", g_inv);
+        let c2g = {
+            let mut subs1 = {
+                let subs2 = g_inv.clone().subs(y3, pc22y3);
+                println!("subs2{:?}", subs2);
+                subs2.subs(y2, pc21y2)
+            };
+            subs1.mons.pop();
+            println!("subs1{:?}", subs1);
+            subs1
+        };
+        println!("c2g{:?}", c2g);
+        println!("g_inv{:?}", g_inv);
+        assert!(c2g == g_inv);
+        println!("{:?}", "remaind");
+        let remainder = c1g.rem_par(p.clone());
+        println!("{:?}", remainder);
+        let pg = c2g * p;
 
-        /*
-            Parametrized Reminder Test
-        */
+        // last substitution
+        // pxVn => x-th substitution to Vn
+        let p1y1 = Poly::zero(r.clone());
+        let p2y2 = Poly::zero(r.clone());
+        let mut m = HashMap::new();
+        m.insert(x1, 1);
+        let p3y3 = Poly::from((vec![Mon::from(m)], r.clone()));
+        let g1 = {
+            let subs1 = {
+                let subs2 = {
+                    let subs3 = pg.subs(y3, p3y3.clone());
+                    subs3.subs(y2, p2y2.clone())
+                };
+                subs2.subs(y1, p1y1.clone())
+            };
+            subs1
+        };
+        let g2 = {
+            let subs1 = {
+                let subs2 = {
+                    let subs3 = remainder.subs(y3, p3y3);
+                    subs3.subs(y2, p2y2)
+                };
+                subs2.subs(y1, p1y1)
+            };
+            subs1
+        };
+        println!("{:?}", g1);
+        println!("{:?}", g2);
     }
 }

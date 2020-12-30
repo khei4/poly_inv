@@ -21,7 +21,6 @@ pub struct Mon<T: Coef> {
 
 impl<T: Coef> std::fmt::Debug for Mon<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        // constant
         let mut res: String;
         if self.is_cnst() {
             res = format!("{:?}", self.coef);
