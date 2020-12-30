@@ -18,7 +18,7 @@ pub struct ParTerm {
 
 impl std::fmt::Debug for ParTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = if self.coef == Rational64::one() {
+        let mut res = if self.coef == C::one() {
             String::new()
         } else {
             format!("{}", self.coef)
@@ -36,13 +36,13 @@ impl ParTerm {
     fn zero() -> Self {
         ParTerm {
             par: None,
-            coef: Rational64::zero(),
+            coef: C::zero(),
         }
     }
     fn one() -> Self {
         ParTerm {
             par: None,
-            coef: Rational64::one(),
+            coef: C::one(),
         }
     }
     fn is_cnst(self) -> bool {
@@ -54,7 +54,7 @@ impl From<Par> for ParTerm {
     fn from(par: Par) -> Self {
         ParTerm {
             par: Some(par),
-            coef: Rational64::one(),
+            coef: C::one(),
         }
     }
 }
@@ -92,7 +92,7 @@ fn parterm_ord_test() {
     // ParTermのオーダーは辞書順
     let a = ParTerm::from(Par::new(0));
     let c = ParTerm::from(Par::new(2));
-    let a = a * Rational64::new(8, 1);
+    let a = a * C::new(8, 1);
     assert!(a < c);
 }
 
@@ -110,7 +110,7 @@ impl std::fmt::Debug for LinExp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.terms[0]);
         for i in 1..self.terms.len() {
-            if self.terms[i].coef > Rational64::zero() {
+            if self.terms[i].coef > C::zero() {
                 res = format!("{}+{:?}", res, self.terms[i]);
             } else {
                 res = format!("{}{:?}", res, self.terms[i]);
@@ -130,7 +130,7 @@ impl LinExp {
                 let c = self.terms[i].coef;
                 self.terms[i - 1].coef += c;
                 self.terms[i] = z;
-                if self.terms[i - 1].coef == Rational64::zero() {
+                if self.terms[i - 1].coef == C::zero() {
                     self.terms[i - 1] = z;
                 }
             }
@@ -171,7 +171,7 @@ impl std::ops::Add<LinExp> for LinExp {
             if self.terms[i - 1] <= self.terms[i] && self.terms[i] <= self.terms[i - 1] {
                 let c = self.terms[i].coef;
                 self.terms[i - 1].coef += c;
-                if self.terms[i - 1].coef == Rational64::zero() {
+                if self.terms[i - 1].coef == C::zero() {
                     self.terms[i - 1] = z;
                 }
                 self.terms[i] = z;
@@ -202,7 +202,7 @@ impl std::ops::Add<C> for LinExp {
         if let Some(l) = self.terms.last_mut() {
             if *l >= a {
                 l.coef += other;
-                if l.coef == Rational64::zero() {
+                if l.coef == C::zero() {
                     self.terms.pop();
                 }
             } else {
@@ -232,7 +232,7 @@ impl std::ops::Mul<C> for LinExp {
     type Output = LinExp;
 
     fn mul(mut self, other: C) -> Self::Output {
-        if other == Rational64::zero() {
+        if other == C::zero() {
             LinExp::zero()
         } else {
             for t in &mut self.terms {
@@ -250,15 +250,15 @@ impl std::ops::MulAssign<C> for LinExp {
 
 #[test]
 fn linexp_ops_test() {
-    let threea = ParTerm::from(Par::new(0)) * Rational64::new(3, 1);
+    let threea = ParTerm::from(Par::new(0)) * C::new(3, 1);
     let twob = ParTerm::from(Par::new(1));
     let onec = ParTerm::from(Par::new(2));
-    let le1 = LinExp::from(vec![threea, twob * Rational64::new(-1, 1), onec]);
+    let le1 = LinExp::from(vec![threea, twob * C::new(-1, 1), onec]);
     let le2 = LinExp::from(vec![twob, onec]);
     // TODO:
     println!("{:?}", le1);
-    println!("{:?}", le1.clone() * Rational64::new(9, 1));
-    println!("{:?}", le1.clone() * Rational64::zero());
+    println!("{:?}", le1.clone() * C::new(9, 1));
+    println!("{:?}", le1.clone() * C::zero());
     let les = le1 + le2;
     println!("{:?}", les);
 }
