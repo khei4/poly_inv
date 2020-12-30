@@ -27,32 +27,21 @@ impl std::fmt::Debug for Temp {
 }
 
 // constructers
-// varsを参照して, parsを増やして, 一般の多項式を返す
-// TODO: parametersの数がとても少ない
-
-#[test]
-fn check_most_gen() {
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
-    let vars = vec![x, y, z];
-    let r = Rc::new(RefCell::new(Ring::from(vars)));
-    println!("{:?}", Temp::most_gen(2, r.clone()));
-    println!("{:?}", Temp::most_gen(2, r.clone()));
+impl Temp {
+    fn zero(r: Rc<RefCell<Ring>>) -> Temp {
+        Temp {
+            mons: vec![Reverse(Mon::zero())],
+            r,
+        }
+    }
+    fn one(r: Rc<RefCell<Ring>>) -> Temp {
+        Temp {
+            mons: vec![Reverse(Mon::one())],
+            r,
+        }
+    }
 }
-
-#[test]
-fn check_rem_par() {
-    let v = Var::new('v');
-    let w = Var::new('w');
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
-    let vars = vec![v, w, x, y, z];
-    let r = Rc::new(RefCell::new(Ring::from(vars)));
-    println!("{:?}", Temp::most_gen(2, r));
-}
-
+// construct Temp with extend Rings
 impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
     fn from(a: (Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
@@ -67,18 +56,6 @@ impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
 
 // methods
 impl Temp {
-    fn zero(r: Rc<RefCell<Ring>>) -> Temp {
-        Temp {
-            mons: vec![Reverse(Mon::zero())],
-            r,
-        }
-    }
-    fn one(r: Rc<RefCell<Ring>>) -> Temp {
-        Temp {
-            mons: vec![Reverse(Mon::one())],
-            r,
-        }
-    }
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<LinExp>::zero());
@@ -141,8 +118,10 @@ impl Temp {
             }
         }
         r.borrow_mut().pextend(fresh_pars);
+        mons.sort();
         Temp { mons, r: r }
     }
+
     fn rem_par(&self, other: Poly) -> Temp {
         let diff = self.tdeg() - other.tdeg();
         let q = Temp::most_gen(diff, self.r.clone());
@@ -173,50 +152,6 @@ impl Temp {
     }
 }
 
-#[test]
-fn check_poly_substitution() {
-    use std::collections::HashMap;
-    // Variables
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
-
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-    let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
-
-    let yz: Mon<LinExp> = Mon::from((pars[0], md4.clone()));
-    let ax2: Mon<LinExp> = Mon::from((pars[0], md1.clone()));
-    let bx2: Mon<LinExp> = Mon::from((pars[1], md1.clone()));
-    let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
-    let dxy: Mon<LinExp> = Mon::from((pars[3], md2.clone()));
-    let y2: Mon<LinExp> = Mon::from((pars[3], md3.clone()));
-    r.borrow_mut().pextend(pars);
-    assert!(cxy > yz);
-    let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
-    // Monomials
-    let yz: Mon<C> = Mon::from(md4);
-    let x2: Mon<C> = Mon::from(md1);
-    let xy: Mon<C> = Mon::from(md2);
-    let y2: Mon<C> = Mon::from(md3);
-    assert!(xy > yz);
-    let one: Mon<C> = Mon::one() * C::new(12, 1);
-    let p2 = Poly::from((vec![x2, yz, one], r.clone()));
-    assert!(p1.tdeg() == 2);
-    println!("{:?} subs {:?} to {:?} ", p1, x, p2);
-    println!("{:?}", p1.subs(x, p2));
-}
-
 impl std::ops::Add<Temp> for Temp {
     type Output = Temp;
 
@@ -231,43 +166,6 @@ impl std::ops::AddAssign<Temp> for Temp {
     fn add_assign(&mut self, rhs: Temp) {
         *self = self.clone() + rhs;
     }
-}
-#[test]
-fn check_temp_addition() {
-    use std::collections::HashMap;
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
-
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-    let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
-
-    let yz: Mon<LinExp> = Mon::from((pars[0], md4));
-    let ax2: Mon<LinExp> = Mon::from((pars[0], md1.clone()));
-    let bx2: Mon<LinExp> = Mon::from((pars[1], md1));
-    let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
-    let dxy: Mon<LinExp> = Mon::from((pars[3], md2));
-    let y2: Mon<LinExp> = Mon::from((pars[3], md3));
-    r.borrow_mut().pextend(pars);
-    assert!(cxy > yz);
-    let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
-    let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
-    assert!(p1.tdeg() == 2);
-    assert!(p2.tdeg() == 2);
-    let a = p1 + p2;
-    println!("{:?}", a);
-    assert!(a.tdeg() == 2);
 }
 
 impl std::ops::Mul<Poly> for Temp {
@@ -291,47 +189,106 @@ impl std::ops::MulAssign<Poly> for Temp {
     }
 }
 
-#[test]
-fn check_poly_multiplication() {
-    use std::collections::HashMap;
-    // Variables
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn check_temp_add_poly_mul() {
+        use std::collections::HashMap;
+        // Init Ring
+        let x: Var = Var::new('x');
+        let y = Var::new('y');
+        let z = Var::new('z');
+        let r = Ring::new(vec![x, y, z]);
 
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-    let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
+        // Init Template
+        let mut md1 = HashMap::new();
+        md1.insert(x, 2);
+        let mut md2 = HashMap::new();
+        md2.insert(x, 1);
+        md2.insert(y, 1);
+        let mut md3 = HashMap::new();
+        md3.insert(y, 2);
+        let mut md4 = HashMap::new();
+        md4.insert(y, 1);
+        md4.insert(z, 1);
+        let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
 
-    let yz: Mon<LinExp> = Mon::from((pars[0], md4.clone()));
-    let ax2: Mon<LinExp> = Mon::from((pars[0], md1.clone()));
-    let bx2: Mon<LinExp> = Mon::from((pars[1], md1.clone()));
-    let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
-    let dxy: Mon<LinExp> = Mon::from((pars[3], md2.clone()));
-    let y2: Mon<LinExp> = Mon::from((pars[3], md3.clone()));
-    r.borrow_mut().pextend(pars);
-    assert!(cxy > yz);
-    let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
-    // Monomials
-    let yz: Mon<C> = Mon::from(md4);
-    let x2: Mon<C> = Mon::from(md1);
-    let xy: Mon<C> = Mon::from(md2);
-    let y2: Mon<C> = Mon::from(md3);
-    assert!(xy > yz);
-    let one: Mon<C> = Mon::one() * C::new(12, 1);
-    let p2 = Poly::from((vec![x2, yz, one], r.clone()));
-    assert!(p1.tdeg() == 2);
-    let m = p1 * p2;
-    println!("{:?}", m);
-    assert!(m.tdeg() == 4);
+        let yz: Mon<LinExp> = Mon::from((pars[0], md4.clone()));
+        let ax2: Mon<LinExp> = Mon::from((pars[0], md1.clone()));
+        let bx2: Mon<LinExp> = Mon::from((pars[1], md1.clone()));
+        let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
+        let dxy: Mon<LinExp> = Mon::from((pars[3], md2.clone()));
+        let y2: Mon<LinExp> = Mon::from((pars[3], md3.clone()));
+        // TODO: ここはFromでパラメーター拡張してほしい
+        r.borrow_mut().pextend(pars);
+        let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
+        let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
+        assert!(p1.tdeg() == 2);
+        assert!(p2.tdeg() == 2);
+
+        /*
+            Addition Test
+        */
+
+        let p1 = p1 + p2;
+        // Monomials, Polynomials
+        let yz: Mon<C> = Mon::from(md4);
+        let x2: Mon<C> = Mon::from(md1);
+        let xy: Mon<C> = Mon::from(md2);
+        let y2: Mon<C> = Mon::from(md3);
+        let twelve: Mon<C> = Mon::one() * C::new(12, 1);
+        let p2 = Poly::from((vec![x2, yz, xy, y2, twelve], r.clone()));
+        assert!(p1.tdeg() == 2);
+        let m = p1 * p2;
+        println!("{:?}", m);
+        assert!(m.tdeg() == 4);
+    }
+
+    #[test]
+    fn check_subs_mostgen_rempar() {
+        use std::collections::HashMap;
+        // Init Ring
+        let x: Var = Var::new('x');
+        let y = Var::new('y');
+        let z = Var::new('z');
+        let r = Ring::new(vec![x, y, z]);
+        // Init Monomial Dic
+        let mut md1 = HashMap::new();
+        md1.insert(x, 2);
+        let mut md2 = HashMap::new();
+        md2.insert(x, 1);
+        md2.insert(y, 1);
+        let mut md3 = HashMap::new();
+        md3.insert(y, 2);
+        let mut md4 = HashMap::new();
+        md4.insert(y, 1);
+        md4.insert(z, 1);
+
+        // Init Template by
+        /*
+            Most Generic Template
+        */
+        let p1 = Temp::most_gen(2, r.clone());
+        println!("{:?}", p1);
+        assert!(p1.tdeg() == 2);
+
+        // Monomials
+        let yz: Mon<C> = Mon::from(md4);
+        let x2: Mon<C> = Mon::from(md1);
+        let xy: Mon<C> = Mon::from(md2);
+        let y2: Mon<C> = Mon::from(md3);
+        let twelve: Mon<C> = Mon::one() * C::new(12, 1);
+        let p2 = Poly::from((vec![x2, yz, y2, twelve], r.clone()));
+
+        /*
+            Substitution Test
+        */
+        println!("{:?} subs {:?} to {:?} ", p1, x, p2);
+        println!("{:?}", p1.subs(x, p2));
+
+        /*
+            Parametrized Reminder Test
+        */
+    }
 }
