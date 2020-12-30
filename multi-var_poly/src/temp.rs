@@ -90,7 +90,8 @@ impl Temp {
         });
     }
     fn tdeg(&self) -> usize {
-        self.mons[0].0.vars.iter().fold(0, |s, (_, v)| s + v)
+        let m = self.mons.iter().max().expect("Temp T-degree Panic");
+        m.0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 
     fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
