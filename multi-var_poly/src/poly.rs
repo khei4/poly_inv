@@ -26,6 +26,16 @@ impl std::fmt::Debug for Poly {
     }
 }
 
+// constructors
+impl Poly {
+    pub fn one(r: Rc<RefCell<Ring>>) -> Poly {
+        Poly::from((vec![Mon::<C>::one()], r))
+    }
+    pub fn zero(r: Rc<RefCell<Ring>>) -> Poly {
+        Poly::from((vec![Mon::<C>::zero()], r))
+    }
+}
+
 impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
     fn from(a: (Vec<Mon<C>>, Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
@@ -41,9 +51,6 @@ impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
 // methods
 
 impl Poly {
-    pub fn one(r: Rc<RefCell<Ring>>) -> Poly {
-        Poly::from((vec![Mon::<C>::one()], r))
-    }
     fn sort_sumup(&mut self) {
         // dummy monomial
         let dm = Reverse(Mon::<C>::zero());
