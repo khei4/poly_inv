@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 itertools = "0.10.0"
+num-rational = "0.3"
+num-traits = "0.2.14"
