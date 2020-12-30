@@ -1,14 +1,4 @@
 /*
-実係数(f64)多変数多項式
-- 変数順序は辞書順にする (x < y < z < w)
-- 単項式順序はgrevlex
-- 掛け算はナイーブ
-TODO:
-*/
-
-// =========
-
-/*
 Variables
 */
 // mod coef;
@@ -222,7 +212,7 @@ fn mon_ord_test() {
     let xy: Mon<C> = Mon::from(md2);
     let y2: Mon<C> = Mon::from(md3);
     let yz: Mon<C> = Mon::from(md4);
-    let eight = Mon::one() * Rational64::new(8, 1);
+    let eight = Mon::one() * C::new(8, 1);
     let z = Mon::zero();
     assert!(z < eight);
     assert!(xy < x2);
