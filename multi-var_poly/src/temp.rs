@@ -44,11 +44,18 @@ impl Temp {
 // construct Temp with extend Rings
 impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
     fn from(a: (Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)) -> Self {
+        let (a, r) = a;
         let mut mons = vec![];
-        for m in a.0 {
+        // TODO: parametersをSetにする.
+        for m in a {
+            for pt in &m.coef.terms {
+                r.borrow_mut().pars.push(pt.par.expect(""));
+            }
             mons.push(Reverse(m));
         }
-        let mut p = Temp { mons, r: a.1 };
+        r.borrow_mut().pars.sort();
+        r.borrow_mut().pars.dedup();
+        let mut p = Temp { mons, r };
         p.sort_sumup();
         p
     }
@@ -222,10 +229,10 @@ mod tests {
         let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
         let dxy: Mon<LinExp> = Mon::from((pars[3], md2.clone()));
         let y2: Mon<LinExp> = Mon::from((pars[3], md3.clone()));
-        // TODO: ここはFromでパラメーター拡張してほしい
-        r.borrow_mut().pextend(pars);
         let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
         let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
+        // もれなくだぶりなく拡張されている
+        assert!(r.as_ref().borrow().pars == pars);
         assert!(p1.tdeg() == 2);
         assert!(p2.tdeg() == 2);
 
@@ -248,7 +255,7 @@ mod tests {
     }
 
     #[test]
-    fn check_subs_mostgen_rempar() {
+    fn check_subs_mostgen() {
         use std::collections::HashMap;
         // Init Ring
         let x: Var = Var::new('x');
@@ -272,6 +279,57 @@ mod tests {
             Most Generic Template
         */
         let p1 = Temp::most_gen(2, r.clone());
+        // 3 variable, 2 degree => 4H2 == 5C2 == 10
+        assert!(r.as_ref().borrow().pars.len() == 10);
+        println!("{:?}", p1);
+        assert!(p1.tdeg() == 2);
+
+        // Monomials
+        let yz: Mon<C> = Mon::from(md4);
+        let x2: Mon<C> = Mon::from(md1);
+        let xy: Mon<C> = Mon::from(md2);
+        let y2: Mon<C> = Mon::from(md3);
+        let twelve: Mon<C> = Mon::one() * C::new(12, 1);
+        let p2 = Poly::from((vec![x2, yz, y2, twelve], r.clone()));
+
+        /*
+            Substitution Test
+        */
+        println!("{:?} subs {:?} to {:?} ", p1, x, p2);
+        println!("{:?}", p1.subs(x, p2));
+
+        /*
+            Parametrized Reminder Test
+        */
+    }
+
+    #[test]
+    fn check_mannadiv_poly() {
+        use std::collections::HashMap;
+        // Init Ring
+        let x: Var = Var::new('x');
+        let y = Var::new('y');
+        let z = Var::new('z');
+        let r = Ring::new(vec![x, y, z]);
+        // Init Monomial Dic
+        let mut md1 = HashMap::new();
+        md1.insert(x, 2);
+        let mut md2 = HashMap::new();
+        md2.insert(x, 1);
+        md2.insert(y, 1);
+        let mut md3 = HashMap::new();
+        md3.insert(y, 2);
+        let mut md4 = HashMap::new();
+        md4.insert(y, 1);
+        md4.insert(z, 1);
+
+        // Init Template by
+        /*
+            Most Generic Template
+        */
+        let p1 = Temp::most_gen(2, r.clone());
+        // 3 variable, 2 degree => 4H2 == 5C2 == 10
+        assert!(r.as_ref().borrow().pars.len() == 10);
         println!("{:?}", p1);
         assert!(p1.tdeg() == 2);
 
