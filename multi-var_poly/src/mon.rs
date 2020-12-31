@@ -85,6 +85,15 @@ impl<T: Coef> From<Var> for Mon<T> {
     }
 }
 
+impl<T: Coef> From<Vec<(Var, usize)>> for Mon<T> {
+    fn from(v: Vec<(Var, usize)>) -> Self {
+        Mon {
+            vars: v.into_iter().collect(),
+            coef: T::one(),
+        }
+    }
+}
+
 impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     fn from(m: HashMap<Var, usize>) -> Self {
         Mon {
