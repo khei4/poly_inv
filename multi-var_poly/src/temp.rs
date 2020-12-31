@@ -305,24 +305,11 @@ mod tests {
 
     #[test]
     fn check_subs_mostgen() {
-        use std::collections::HashMap;
-        let s: std::collections::HashSet<Temp> = std::collections::HashSet::new();
         // Init Ring
         let x: Var = Var::new('x');
         let y = Var::new('y');
         let z = Var::new('z');
         let r = Ring::new(vec![x, y, z]);
-        // Init Monomial Dic
-        let mut md1 = HashMap::new();
-        md1.insert(x, 2);
-        let mut md2 = HashMap::new();
-        md2.insert(x, 1);
-        md2.insert(y, 1);
-        let mut md3 = HashMap::new();
-        md3.insert(y, 2);
-        let mut md4 = HashMap::new();
-        md4.insert(y, 1);
-        md4.insert(z, 1);
 
         // Init Template by
         /*
@@ -335,10 +322,10 @@ mod tests {
         assert!(p1.tdeg() == 2);
 
         // Monomials
-        let yz: Mon<C> = Mon::from(md4);
-        let x2: Mon<C> = Mon::from(md1);
-        let xy: Mon<C> = Mon::from(md2);
-        let y2: Mon<C> = Mon::from(md3);
+        let x2: Mon<C> = Mon::from(vec![(x, 2)]);
+        let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
+        let y2: Mon<C> = Mon::from(vec![(y, 2)]);
+        let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
         let twelve: Mon<C> = Mon::one() * C::new(12, 1);
         let p2 = Poly::from((vec![x2, yz, y2, twelve], r.clone()));
 
@@ -347,10 +334,6 @@ mod tests {
         */
         println!("{:?} subs {:?} to {:?} ", p1, x, p2);
         println!("{:?}", p1.subs(x, p2));
-
-        /*
-            Parametrized Reminder Test
-        */
     }
 
     #[test]
