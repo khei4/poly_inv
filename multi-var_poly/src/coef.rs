@@ -10,8 +10,9 @@ use super::ring::*;
 // BigIntにすると, ParTermがCopyじゃなくなる
 pub use num_rational::Rational64;
 pub use num_traits::identities::{One, Zero};
+use std::hash::Hash;
 pub type C = Rational64;
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Hash)]
 pub struct ParTerm {
     pub par: Option<Par>,
     coef: C,
@@ -102,7 +103,7 @@ Linear Expressions of Parameter (by Vec)
 TODO: Debug trait
 */
 
-#[derive(Clone, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Hash)]
 pub struct LinExp {
     pub terms: Vec<ParTerm>,
 }
@@ -314,6 +315,7 @@ pub trait Coef:
     + std::fmt::Debug
     + One
     + Zero
+    + Hash
 {
 }
 

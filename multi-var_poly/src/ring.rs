@@ -34,7 +34,7 @@ impl std::fmt::Debug for Par {
 // TODO: vars, ParをMapで持つ
 use std::cell::RefCell;
 use std::rc::Rc;
-#[derive(Eq, PartialEq, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug, Hash)]
 pub struct Ring {
     pub vars: Vec<Var>,
     pub pars: Vec<Par>,

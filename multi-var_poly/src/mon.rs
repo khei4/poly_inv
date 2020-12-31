@@ -11,12 +11,22 @@ Monomials
 */
 
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 
 #[derive(PartialEq, Clone)]
 pub struct Mon<T: Coef> {
     // Var and Deg
     pub vars: HashMap<Var, usize>,
     pub coef: T,
+}
+
+impl<T: Coef> Hash for Mon<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.coef.hash(state);
+        let mut v: Vec<(Var, usize)> = self.vars.clone().into_iter().collect();
+        v.sort();
+        v.hash(state);
+    }
 }
 
 impl<T: Coef> std::fmt::Debug for Mon<T> {
@@ -103,10 +113,20 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     }
 }
 
+// TODO: なくす
 impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
         Mon {
             vars: pm.1,
+            coef: LinExp::from(pm.0),
+        }
+    }
+}
+
+impl From<(Par, Vec<(Var, usize)>)> for Mon<LinExp> {
+    fn from(pm: (Par, Vec<(Var, usize)>)) -> Self {
+        Mon {
+            vars: pm.1.into_iter().collect(),
             coef: LinExp::from(pm.0),
         }
     }

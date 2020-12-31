@@ -5,11 +5,18 @@ use super::ring::*;
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Reverse;
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 #[derive(PartialEq, Clone)]
 pub struct Temp {
     pub mons: Vec<Reverse<Mon<LinExp>>>,
     pub r: Rc<RefCell<Ring>>,
+}
+impl Eq for Temp {}
+impl Hash for Temp {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.mons.hash(state);
+    }
 }
 
 impl std::fmt::Debug for Temp {
@@ -299,6 +306,7 @@ mod tests {
     #[test]
     fn check_subs_mostgen() {
         use std::collections::HashMap;
+        let s: std::collections::HashSet<Temp> = std::collections::HashSet::new();
         // Init Ring
         let x: Var = Var::new('x');
         let y = Var::new('y');
