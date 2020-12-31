@@ -253,26 +253,16 @@ mod tests {
         let y = Var::new('y');
         let z = Var::new('z');
         let r = Ring::new(vec![x, y, z]);
-
-        // Init Template
-        let mut md1 = HashMap::new();
-        md1.insert(x, 2);
-        let mut md2 = HashMap::new();
-        md2.insert(x, 1);
-        md2.insert(y, 1);
-        let mut md3 = HashMap::new();
-        md3.insert(y, 2);
-        let mut md4 = HashMap::new();
-        md4.insert(y, 1);
-        md4.insert(z, 1);
+        // parameters
         let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
+        // Init Template
 
-        let yz: Mon<LinExp> = Mon::from((pars[0], md4.clone()));
-        let ax2: Mon<LinExp> = Mon::from((pars[0], md1.clone()));
-        let bx2: Mon<LinExp> = Mon::from((pars[1], md1.clone()));
-        let cxy: Mon<LinExp> = Mon::from((pars[2], md2.clone()));
-        let dxy: Mon<LinExp> = Mon::from((pars[3], md2.clone()));
-        let y2: Mon<LinExp> = Mon::from((pars[3], md3.clone()));
+        let ax2: Mon<LinExp> = Mon::from((pars[0], vec![(x, 2)]));
+        let bx2: Mon<LinExp> = Mon::from((pars[1], vec![(x, 1), (y, 1)]));
+        let cxy: Mon<LinExp> = Mon::from((pars[2], vec![(x, 1), (y, 1)]));
+        let dxy: Mon<LinExp> = Mon::from((pars[3], vec![(x, 1), (y, 1)]));
+        let y2: Mon<LinExp> = Mon::from((pars[3], vec![(y, 2)]));
+        let yz: Mon<LinExp> = Mon::from((pars[0], vec![(y, 1), (z, 1)]));
         let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
         let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
         // もれなくだぶりなく拡張されている
@@ -290,10 +280,10 @@ mod tests {
         assert!(p1.clone() == Temp::zero(r.clone()) + p1.clone());
 
         // Monomials, Polynomials
-        let yz: Mon<C> = Mon::from(md4);
-        let x2: Mon<C> = Mon::from(md1);
-        let xy: Mon<C> = Mon::from(md2);
-        let y2: Mon<C> = Mon::from(md3);
+        let x2: Mon<C> = Mon::from(vec![(x, 2)]);
+        let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
+        let y2: Mon<C> = Mon::from(vec![(y, 2)]);
+        let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
         let twelve: Mon<C> = Mon::one() * C::new(12, 1);
         let p2 = Poly::from((vec![x2, yz, xy, y2, twelve], r.clone()));
 
