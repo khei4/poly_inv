@@ -9,6 +9,12 @@ pub struct Pred {
     eq: bool, // true == '=', false == '≠'
 }
 
+impl Pred {
+    fn new(p: Poly, eq: bool) -> Self {
+        Pred { p, eq }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Ass {
@@ -31,8 +37,7 @@ pub enum Expr {
 }
 
 #[test]
-fn mannadiv_sample() {
-    use std::collections::HashMap;
+fn mannadiv_simple() {
     // Init Ring
     // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
     let x1 = Var::new('v');
@@ -40,50 +45,70 @@ fn mannadiv_sample() {
     let y1 = Var::new('x');
     let y2 = Var::new('y');
     let y3 = Var::new('z');
-
     let r = Ring::new(vec![x1, x2, y1, y2, y3]);
-    let mut m = HashMap::new();
-    m.insert(y1, 1);
-    let pc11y1 = Poly::from((vec![Mon::from(m), Mon::one()], r.clone()));
-    let pc12y2 = Poly::zero(r.clone());
-    let mut m = HashMap::new();
-    m.insert(y3, 1);
-    let pc13y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
-    // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
-    let c1 = Expr::Seq {
+
+    /*
+        Initial Assignment
+    */
+
+    let p1y1 = Poly::zero(r.clone());
+    let p2y2 = Poly::zero(r.clone());
+    let p3y3 = Poly::from((vec![Mon::from(vec![(x1, 1)])], r.clone()));
+    let c_init = Expr::Seq {
         exprs: vec![
-            Expr::Ass {
-                lv: Var::new('x'),
-                rv: pc11y1,
-            },
-            Expr::Ass {
-                lv: Var::new('y'),
-                rv: pc12y2,
-            },
-            Expr::Ass {
-                lv: Var::new('z'),
-                rv: pc13y3,
-            },
+            Expr::Ass { lv: y1, rv: p1y1 },
+            Expr::Ass { lv: y2, rv: p2y2 },
+            Expr::Ass { lv: y3, rv: p3y3 },
         ],
     };
 
-    // let c_while = If {
-    //     guard:,
-    //     the:,
-    //     els:
-    // }
+    /*
+        Construct If
+    */
+    // then clause
+    let pc11y1 = Poly::from((vec![Mon::from(vec![(y1, 1)]), Mon::one()], r.clone()));
+    let pc12y2 = Poly::zero(r.clone());
+    let pc13y3 = Poly::from((
+        vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
+        r.clone(),
+    ));
+    let c1 = Expr::Seq {
+        exprs: vec![
+            Expr::Ass { lv: y1, rv: pc11y1 },
+            Expr::Ass { lv: y2, rv: pc12y2 },
+            Expr::Ass { lv: y3, rv: pc13y3 },
+        ],
+    };
+    // else clause
+    let pc21y2 = Poly::from((vec![Mon::from(vec![(y2, 1)]), Mon::one()], r.clone()));
+    let pc22y3 = Poly::from((
+        vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
+        r.clone(),
+    ));
+    let c2 = Expr::Seq {
+        exprs: vec![
+            Expr::Ass { lv: y2, rv: pc21y2 },
+            Expr::Ass { lv: y3, rv: pc22y3 },
+        ],
+    };
+
     // guard polynomial
     // p = x2-y2-1
-    let mut md1 = HashMap::new();
-    md1.insert(x2, 1);
-    let mut md2 = HashMap::new();
-    md2.insert(y2, 1);
-    let m1: Mon<C> = Mon::from(md1);
-    let m2: Mon<C> = Mon::from(md2) * -C::one();
-    let n_one: Mon<C> = Mon::one() * -C::one();
-    let p = Poly::from((vec![m1, m2, n_one], r.clone()));
-    // let w = Expr::While {
-    //     guard: p,
+    let p = Poly::from((
+        vec![
+            Mon::from(vec![(x2, 1)]),
+            Mon::from(vec![(y2, 1)]) * -C::one(),
+            Mon::one() * -C::one(),
+        ],
+        r.clone(),
+    ));
+    let c_if = Expr::If {
+        guard: Pred::new(p, true),
+        the: Box::new(c1),
+        els: Box::new(c2),
+    };
 
-    // }
+    let c = Expr::Seq {
+        exprs: vec![c_init, c_if],
+    };
 }
