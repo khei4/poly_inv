@@ -14,7 +14,7 @@ pub struct Poly {
 // display, debug
 impl std::fmt::Debug for Poly {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        println!("{:?}", self.mons.len());
+        assert!(0 < self.mons.len());
         let mut res = format!("{:?}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > C::zero() {
