@@ -108,30 +108,16 @@ impl Poly {
 }
 #[test]
 fn check_poly_pow() {
-    use std::collections::HashMap;
-    let x: Var = Var::new('x');
+    let x = Var::new('x');
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
     let r = Rc::new(RefCell::new(Ring::from(vars)));
 
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-
-    let yz: Mon<C> = Mon::from(md4);
-    let x2: Mon<C> = Mon::from(md1);
-    let xy: Mon<C> = Mon::from(md2);
-    let y2: Mon<C> = Mon::from(md3);
-    assert!(xy > yz);
-    let one: Mon<C> = Mon::one();
+    // Monomials, Polynomials
+    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
+    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
+    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
     let p1 = Poly::from((vec![x2], r.clone()));
     println!("{:?}", p1.pow(5));
 }
@@ -187,39 +173,23 @@ impl std::ops::MulAssign<Poly> for Poly {
 
 #[test]
 fn check_poly_addition() {
-    use std::collections::HashMap;
-    let x: Var = Var::new('x');
+    let x = Var::new('x');
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
     let r = Rc::new(RefCell::new(Ring::from(vars)));
 
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-
-    let yz: Mon<C> = Mon::from(md4);
-    let x2: Mon<C> = Mon::from(md1);
-    let xy: Mon<C> = Mon::from(md2);
-    let y2: Mon<C> = Mon::from(md3);
-    assert!(xy > yz);
-    let one: Mon<C> = Mon::one();
-    let p1 = Poly::from((vec![x2, yz, one.clone() * C::new(12, 1)], r.clone()));
-    let p2 = Poly::from((vec![xy, y2, one * C::new(9, 1)], r.clone()));
+    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
+    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
+    let y2: Mon<C> = Mon::from(vec![(y, 2)]);
+    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
+    let twelve: Mon<C> = Mon::one() * C::new(12, 1);
+    let p1 = Poly::from((vec![x2, yz, twelve.clone()], r.clone()));
+    let p2 = Poly::from((vec![xy, y2, twelve], r.clone()));
     let p3 = Poly::from((vec![], r.clone()));
-    println!("{:?}", p1.r);
-    p3.r.borrow_mut().pextend(vec![Par::new(0)]);
-    println!("{:?}", p1.r);
     assert!(p1.tdeg() == 2);
     assert!(p2.tdeg() == 2);
-    let mut a = p1 + p2;
+    let a = p1 + p2;
     assert!(a.tdeg() == 2);
     println!("{:?}", a);
 }
