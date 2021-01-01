@@ -257,6 +257,61 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
     }
 }
 
+impl LinearEquations {
+    pub fn solve(&self) -> Vec<(Par, LinExp)> {
+        // 行列を作る. 縦のインデックスは, setのcollectによせる
+        let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); self.parsize]; self.parsize];
+        let mut b: Vec<C> = vec![C::zero(); self.parsize];
+        let rows: Vec<(LinExp, C)> = self.eqs.clone().into_iter().collect();
+        for i in 0..rows.len() {
+            for pt in &rows[i].0.terms {
+                match pt.par {
+                    Some(p) => {
+                        mat[i][p.id] = pt.coef;
+                        b[i] = rows[i].1
+                    }
+                    None => panic!("constant is LHS!!"),
+                }
+            }
+        }
+
+        for k in 0..self.parsize {
+            // pivoting
+            let mut max_i = k;
+            let mut max_v = mat[k][k];
+            for l in k..self.parsize {
+                if mat[l][k] != C::zero() && (max_v < mat[l][k] || max_v == C::zero()) {
+                    max_i = l;
+                    max_v = mat[l][k];
+                }
+            }
+            mat.swap(k, max_i);
+
+            if mat[k][k].is_zero() {
+                continue;
+            }
+            for i in k + 1..self.parsize {
+                let m = mat[i][k] / mat[k][k];
+                for j in k..self.parsize {
+                    let t = m * mat[k][j];
+                    mat[i][j] -= t;
+                }
+                let t = m * b[k];
+                b[i] -= t;
+            }
+        }
+
+        // Debug
+        // for i in 0..self.parsize {
+        //     for j in 0..self.parsize {
+        //         print!("{} ", mat[i][j]);
+        //     }
+        //     println!("={}", b[i]);
+        // }
+        vec![]
+    }
+}
+
 #[test]
 fn zero_and_mostgen() {
     // 0 -> x, 1 -> y, 2 -> z
@@ -274,6 +329,7 @@ fn zero_and_mostgen() {
     a0x0.coef += LinExp::one();
     let mut a1x1: Mon<LinExp> = Mon::from((Par::new(1), vec![(x1, 1)], &r));
     a1x1.coef += LinExp::one() * (C::one() * 8);
+    // どうも今の実装だと, remparが毎回インデックス付けが変わるらしい
     let a2x2: Mon<LinExp> = Mon::from((Par::new(2), vec![(x2, 1)], &r));
     let t = Temp::from((vec![a0x0, a1x1, a2x2], &r));
     println!("{:?}", t);
@@ -284,4 +340,5 @@ fn zero_and_mostgen() {
 
     let leq = LinearEquations::from((c, &r));
     println!("{}", leq);
+    leq.solve();
 }
