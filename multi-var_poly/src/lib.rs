@@ -1,4 +1,5 @@
 mod coef;
+mod constraints;
 mod expr;
 mod mon;
 mod poly;
