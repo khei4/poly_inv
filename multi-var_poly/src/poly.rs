@@ -30,10 +30,10 @@ impl std::fmt::Debug for Poly {
 // constructors
 impl Poly {
     pub fn one(r: &Rc<RefCell<Ring>>) -> Poly {
-        Poly::from((vec![Mon::<C>::one()], r))
+        Poly::from((vec![Mon::<C>::one(&r)], r))
     }
     pub fn zero(r: &Rc<RefCell<Ring>>) -> Poly {
-        Poly::from((vec![Mon::<C>::zero()], r))
+        Poly::from((vec![Mon::<C>::zero(&r)], r))
     }
 }
 
@@ -62,11 +62,11 @@ impl From<(Vec<Mon<C>>, &Rc<RefCell<Ring>>)> for Poly {
 
 impl Poly {
     pub fn is_zero(&self) -> bool {
-        self.mons[0].0 == Mon::zero()
+        self.mons[0].0 == Mon::zero(&self.r)
     }
     fn sort_sumup(&mut self) {
         // dummy monomial
-        let dm = Reverse(Mon::<C>::zero());
+        let dm = Reverse(Mon::<C>::zero(&self.r));
         // 0を追加して, 最後にまとめて消す
         self.mons.sort();
         for i in 1..self.mons.len() {
@@ -98,7 +98,7 @@ impl Poly {
 
     pub fn pow(&self, mut e: usize) -> Poly {
         let mut base = self.clone();
-        let mut res = Poly::from((vec![Mon::one()], &self.r));
+        let mut res = Poly::from((vec![Mon::one(&self.r)], &self.r));
         while e > 0 {
             if e & 1 == 1 {
                 res *= base.clone();
@@ -119,9 +119,9 @@ fn check_poly_pow() {
     let r = Ring::new(vars);
 
     // Monomials, Polynomials
-    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
-    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
-    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
+    let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
+    let xy: Mon<C> = Mon::from((vec![(x, 1), (y, 1)], &r));
+    let yz: Mon<C> = Mon::from((vec![(y, 1), (z, 1)], &r));
     let p1 = Poly::from((vec![x2], &r));
     println!("{:?}", p1.pow(5));
 }
@@ -184,11 +184,11 @@ fn check_poly_addition() {
     let vars = vec![x, y, z];
     let r = Ring::new(vars);
 
-    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
-    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
-    let y2: Mon<C> = Mon::from(vec![(y, 2)]);
-    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
-    let twelve: Mon<C> = Mon::one() * C::new(12, 1);
+    let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
+    let y2: Mon<C> = Mon::from((vec![(y, 2)], &r));
+    let xy: Mon<C> = Mon::from((vec![(x, 1), (y, 1)], &r));
+    let yz: Mon<C> = Mon::from((vec![(y, 1), (z, 1)], &r));
+    let twelve: Mon<C> = Mon::one(&r) * C::new(12, 1);
     let p1 = Poly::from((vec![x2, yz, twelve.clone()], &r));
     let p2 = Poly::from((vec![xy, y2, twelve], &r));
     let p3 = Poly::from((vec![], &r));

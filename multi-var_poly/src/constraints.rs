@@ -267,11 +267,11 @@ fn zero_and_mostgen() {
     let r = Ring::new(vars);
     let i = PIdeal::most_gen(1, &r);
 
-    let mut a0x0: Mon<LinExp> = Mon::from((Par::new(0), vec![(x0, 1)]));
+    let mut a0x0: Mon<LinExp> = Mon::from((Par::new(0), vec![(x0, 1)], &r));
     a0x0.coef += LinExp::one();
-    let mut a1x1: Mon<LinExp> = Mon::from((Par::new(1), vec![(x1, 1)]));
+    let mut a1x1: Mon<LinExp> = Mon::from((Par::new(1), vec![(x1, 1)], &r));
     a1x1.coef += LinExp::one() * (C::one() * 8);
-    let a2x2: Mon<LinExp> = Mon::from((Par::new(2), vec![(x2, 1)]));
+    let a2x2: Mon<LinExp> = Mon::from((Par::new(2), vec![(x2, 1)], &r));
     let t = Temp::from((vec![a0x0, a1x1, a2x2], &r));
     println!("{:?}", t);
     println!("{:?}", i.gens);

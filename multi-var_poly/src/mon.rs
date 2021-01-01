@@ -10,14 +10,16 @@ use super::ring::*;
 Monomials
 */
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-
+use std::rc::Rc;
 #[derive(PartialEq, Clone)]
 pub struct Mon<T: Coef> {
     // Var and Deg
     pub vars: HashMap<Var, usize>,
     pub coef: T,
+    pub r: Rc<RefCell<Ring>>,
 }
 
 impl<T: Coef> Hash for Mon<T> {
@@ -35,7 +37,6 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
         if self.is_cnst() {
             res = format!("{:?}", self.coef);
         } else {
-            // TODO: coefの-1の分岐
             if self.coef == T::one() {
                 res = String::new();
             } else if self.coef == -T::one() {
@@ -45,14 +46,6 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
             } else {
                 res = String::from(format!("{:?}", self.coef));
             }
-
-            // if T::zero() <= self.coef && self.coef != T::one() {
-            //     res = String::from(format!("{:?}", self.coef));
-            // } else if self.coef < T::zero() {
-            //     res = String::from(format!("{:?}", self.coef));
-            // } else {
-            //     res = String::new();
-            // }
 
             {
                 let mut resv = vec![];
@@ -77,18 +70,20 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
 
 impl<T: Coef> Mon<T> {
     // constantは, 変数
-    pub fn one() -> Mon<T> {
+    pub fn one(r: &Rc<RefCell<Ring>>) -> Mon<T> {
         Mon {
             vars: HashMap::new(),
             coef: T::one(),
+            r: r.clone(),
         }
     }
 
     // 番兵用/ zero
-    pub fn zero() -> Mon<T> {
+    pub fn zero(r: &Rc<RefCell<Ring>>) -> Mon<T> {
         Mon {
             vars: HashMap::new(),
             coef: T::zero(),
+            r: r.clone(),
         }
     }
 
@@ -97,49 +92,57 @@ impl<T: Coef> Mon<T> {
     }
 }
 
-impl<T: Coef> From<Var> for Mon<T> {
-    fn from(v: Var) -> Self {
+impl<T: Coef> From<(Var, &Rc<RefCell<Ring>>)> for Mon<T> {
+    fn from(vr: (Var, &Rc<RefCell<Ring>>)) -> Self {
+        let (v, r) = vr;
         let mut m = HashMap::new();
         m.insert(v, 1);
         Mon {
             vars: m,
             coef: T::one(),
+            r: r.clone(),
         }
     }
 }
 
-impl<T: Coef> From<Vec<(Var, usize)>> for Mon<T> {
-    fn from(v: Vec<(Var, usize)>) -> Self {
+impl<T: Coef> From<(Vec<(Var, usize)>, &Rc<RefCell<Ring>>)> for Mon<T> {
+    fn from(vvr: (Vec<(Var, usize)>, &Rc<RefCell<Ring>>)) -> Self {
+        let (v, r) = vvr;
         Mon {
             vars: v.into_iter().collect(),
             coef: T::one(),
+            r: r.clone(),
         }
     }
 }
 
-impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
-    fn from(m: HashMap<Var, usize>) -> Self {
+// impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
+//     fn from(m: HashMap<Var, usize>) -> Self {
+//         Mon {
+//             vars: m,
+//             coef: T::one(),
+//         }
+//     }
+// }
+
+impl From<(Par, HashMap<Var, usize>, &Rc<RefCell<Ring>>)> for Mon<LinExp> {
+    fn from(pmr: (Par, HashMap<Var, usize>, &Rc<RefCell<Ring>>)) -> Self {
+        let (p, m, r) = pmr;
         Mon {
             vars: m,
-            coef: T::one(),
+            coef: LinExp::from(p),
+            r: r.clone(),
         }
     }
 }
 
-impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
-    fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
+impl From<(Par, Vec<(Var, usize)>, &Rc<RefCell<Ring>>)> for Mon<LinExp> {
+    fn from(pmr: (Par, Vec<(Var, usize)>, &Rc<RefCell<Ring>>)) -> Self {
+        let (p, m, r) = pmr;
         Mon {
-            vars: pm.1,
-            coef: LinExp::from(pm.0),
-        }
-    }
-}
-
-impl From<(Par, Vec<(Var, usize)>)> for Mon<LinExp> {
-    fn from(pm: (Par, Vec<(Var, usize)>)) -> Self {
-        Mon {
-            vars: pm.1.into_iter().collect(),
-            coef: LinExp::from(pm.0),
+            vars: m.into_iter().collect(),
+            coef: LinExp::from(p),
+            r: r.clone(),
         }
     }
 }
@@ -147,7 +150,7 @@ impl From<(Par, Vec<(Var, usize)>)> for Mon<LinExp> {
 impl<T: Coef> std::ops::Mul<Mon<C>> for Mon<T> {
     type Output = Mon<T>;
     fn mul(mut self, rhs: Mon<C>) -> Self::Output {
-        let mut n: Mon<T> = Mon::one();
+        let mut n: Mon<T> = Mon::one(&self.r);
         // if LinExp multiplied, program crushes
         n.coef = self.coef * rhs.coef;
         for (v, d) in rhs.vars {
@@ -174,7 +177,7 @@ impl<T: Coef> std::ops::Mul<C> for Mon<T> {
     fn mul(mut self, rhs: C) -> Self::Output {
         self.coef *= rhs;
         if self.coef == T::zero() {
-            self = Mon::zero();
+            self = Mon::zero(&self.r);
         }
         self
     }
@@ -251,12 +254,12 @@ fn mon_ord_test() {
     let vars = vec![x, y, z];
     let r = Ring::new(vars);
 
-    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
-    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
-    let y2: Mon<C> = Mon::from(vec![(y, 2)]);
-    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
-    let eight = Mon::one() * C::new(8, 1);
-    let z = Mon::zero();
+    let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
+    let xy: Mon<C> = Mon::from((vec![(x, 1), (y, 1)], &r));
+    let y2: Mon<C> = Mon::from((vec![(y, 2)], &r));
+    let yz: Mon<C> = Mon::from((vec![(y, 1), (z, 1)], &r));
+    let eight = Mon::one(&r) * C::new(8, 1);
+    let z = Mon::zero(&r);
     assert!(z < eight);
     assert!(xy < x2);
     let mut dp = vec![x2, xy, y2, yz, eight, z];
