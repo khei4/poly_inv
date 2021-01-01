@@ -131,7 +131,7 @@ impl Temp {
         m.0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 
-    fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
+    pub fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
         let v: Vec<Var> = r
             .borrow_mut()
             .vars
@@ -165,13 +165,13 @@ impl Temp {
         Temp { mons, r: r }
     }
 
-    fn rem_par(&self, other: Poly) -> Temp {
+    pub fn rem_par(&self, other: Poly) -> Temp {
         let diff = self.tdeg() - other.tdeg();
         let q = Temp::most_gen(diff, self.r.clone());
         q * (-other) + self.clone()
     }
 
-    fn subs(mut self, v: Var, other: Poly) -> Temp {
+    pub fn subs(mut self, v: Var, other: Poly) -> Temp {
         self.sort_by_var(v);
         let mut res = Temp::zero(self.r.clone());
         let mut base = Poly::one(self.r.clone());

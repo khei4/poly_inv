@@ -5,12 +5,12 @@ use super::ring::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pred {
-    p: Poly,
-    eq: bool, // true == '=', false == '≠'
+    pub p: Poly,
+    pub eq: bool, // true == '=', false == '≠'
 }
 
 impl Pred {
-    fn new(p: Poly, eq: bool) -> Self {
+    pub fn new(p: Poly, eq: bool) -> Self {
         Pred { p, eq }
     }
 }
