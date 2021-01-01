@@ -4,11 +4,21 @@ use super::ring::*;
 use super::temp::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PIdeal {
     pub gens: HashSet<Temp>,
 }
+
+impl Hash for PIdeal {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let mut g = self.gens.clone().into_iter().collect::<Vec<Temp>>();
+        g.sort();
+        g.hash(state);
+    }
+}
+
 impl PIdeal {
     pub fn new() -> PIdeal {
         PIdeal {
@@ -46,15 +56,8 @@ impl PIdeal {
         self
     }
 }
-// impl Iterator for PIdeal {
-//     type Item = Temp;
 
-//     fn next(&mut self) -> Option<Self::Item> {
-
-//     }
-// }
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Constraint(PIdeal, PIdeal);
 
 impl std::cmp::PartialEq for Constraint {
@@ -68,12 +71,14 @@ impl std::cmp::Eq for Constraint {}
 // Setのほうが良い気がするけど,Hashが危ない
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Cs {
-    pub items: Vec<Constraint>,
+    pub items: HashSet<Constraint>,
 }
 
 impl Cs {
     pub fn new() -> Cs {
-        Cs { items: vec![] }
+        Cs {
+            items: HashSet::new(),
+        }
     }
     fn union(mut self, other: Cs) -> Cs {
         self.items.extend(other.items);
@@ -84,7 +89,7 @@ impl Cs {
     }
 
     fn add(mut self, e: Constraint) -> Cs {
-        self.items.push(e);
+        self.items.insert(e);
         self
     }
 }
