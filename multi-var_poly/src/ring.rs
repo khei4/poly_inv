@@ -10,7 +10,7 @@ impl Var {
 
 impl std::fmt::Debug for Var {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", (b'x' + self.id as u8) as char)
+        write!(f, "x[{}]", self.id)
     }
 }
 
@@ -40,20 +40,19 @@ pub struct Ring {
     pub vars: HashMap<Var, String>,
     pub pars: HashSet<Par>,
 }
-
-// TODO: これって, Setのメンバー全部に可換なの？？
 impl Hash for Ring {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.vars
+        let mut v = self
+            .vars
             .clone()
             .into_iter()
-            .collect::<Vec<(Var, String)>>()
-            .hash(state);
-        self.pars
-            .clone()
-            .into_iter()
-            .collect::<Vec<Par>>()
-            .hash(state);
+            .collect::<Vec<(Var, String)>>();
+        v.sort();
+        v.hash(state);
+        // Pについて見ると,拡大されたあとで妙に区別されてしまう
+        // let mut p = self.pars.clone().into_iter().collect::<Vec<Par>>();
+        // p.sort();
+        // p.hash(state);
     }
 }
 
