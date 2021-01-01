@@ -19,6 +19,25 @@ impl Hash for Temp {
     }
 }
 
+impl std::cmp::PartialOrd for Temp {
+    fn partial_cmp(&self, other: &Temp) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl std::cmp::Ord for Temp {
+    fn cmp(&self, other: &Temp) -> std::cmp::Ordering {
+        other
+            .mons
+            .iter()
+            .min()
+            .expect("Temp T-degree Panic")
+            .cmp(&self.mons.iter().min().expect("Temp T-degree Panic"))
+    }
+}
+
+// #[test]
+// fn tempOrdtest
+
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res = format!("{:?}", self.mons[0].0);
