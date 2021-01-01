@@ -126,3 +126,39 @@ pub fn gen_con(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, Cs) {
         }
     }
 }
+
+// don't multiply if-guard polynomial
+pub fn gen_con_less_precise(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, Cs) {
+    match e {
+        Expr::Ass { lv, rv } => {
+            let mut new_gens = HashSet::new();
+            for tp in &mut ideal.gens.iter() {
+                new_gens.insert(tp.clone().subs(*lv, rv.clone()));
+            }
+            ideal.gens = new_gens;
+            (ideal, c)
+        }
+        Expr::Skip => (ideal, c),
+        Expr::Seq { exprs } => {
+            for i in (0..exprs.len()).rev() {
+                let next_ic = gen_con(&exprs[i], ideal, c);
+                ideal = next_ic.0;
+                c = next_ic.1;
+            }
+            (ideal, c)
+        }
+        Expr::If { guard, the, els } => {
+            let (i1, c1) = gen_con(the, ideal.clone(), c.clone());
+            let (i2, c2) = gen_con(els, ideal, c);
+            match guard {
+                Pred { p, eq } if *eq => (i1.rem_par(p).union(i2), c1.union(c2)),
+                Pred { p, .. } => (i2.rem_par(p).union(i1), c1.union(c2)),
+            }
+        }
+        Expr::While { c: body, .. } => {
+            let (i1, c1) = gen_con(body, ideal.clone(), c.clone());
+            c = c.add(Constraint(ideal.clone(), i1));
+            (ideal, c.union(c1))
+        }
+    }
+}
