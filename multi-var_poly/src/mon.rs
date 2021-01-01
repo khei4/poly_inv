@@ -113,7 +113,6 @@ impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
     }
 }
 
-// TODO: なくす
 impl From<(Par, HashMap<Var, usize>)> for Mon<LinExp> {
     fn from(pm: (Par, HashMap<Var, usize>)) -> Self {
         Mon {
