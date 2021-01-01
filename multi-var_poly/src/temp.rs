@@ -337,7 +337,6 @@ mod tests {
 
     #[test]
     fn check_mannadiv_poly() {
-        use std::collections::HashMap;
         // Init Ring
         // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
         let x1 = Var::new('v');
@@ -387,19 +386,16 @@ mod tests {
         println!("c1g{:?}", c1g);
         println!("g_inv{:?}", g_inv);
         let c2g = {
-            let mut subs1 = {
+            let subs1 = {
                 let subs2 = g_inv.clone().subs(y3, pc22y3);
-                println!("subs2{:?}", subs2);
                 subs2.subs(y2, pc21y2)
             };
-            subs1.mons.pop();
-            println!("subs1{:?}", subs1);
             subs1
         };
+        println!("{:?}", c2g.mons[c2g.mons.len() - 1].0.coef.terms);
         println!("c2g{:?}", c2g);
         println!("g_inv{:?}", g_inv);
         assert!(c2g == g_inv);
-        println!("{:?}", "remaind");
         let remainder = c1g.rem_par(p.clone());
         println!("{:?}", remainder);
         let pg = c2g * p;
