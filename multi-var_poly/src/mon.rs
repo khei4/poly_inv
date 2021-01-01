@@ -35,6 +35,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
         if self.is_cnst() {
             res = format!("{:?}", self.coef);
         } else {
+            // TODO: coefの-1の分岐
             if T::zero() <= self.coef && self.coef != T::one() {
                 res = String::from(format!("{:?}", self.coef));
             } else if self.coef < T::zero() {
@@ -53,7 +54,7 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                 // もしくは変数にStringをもたせちゃうか, Cloneはできなくなるけど
                 for (v, d) in resv {
                     if *d != 1 {
-                        res = format!("{}{:?}{}", res, v, d);
+                        res = format!("{}{:?}^{}", res, v, d);
                     } else {
                         res = format!("{}{:?}", res, v);
                     }
