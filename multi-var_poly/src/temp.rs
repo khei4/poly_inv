@@ -55,7 +55,7 @@ impl std::fmt::Debug for Temp {
 
 // constructers
 impl Temp {
-    fn zero(r: &Rc<RefCell<Ring>>) -> Temp {
+    pub fn zero(r: &Rc<RefCell<Ring>>) -> Temp {
         Temp {
             mons: vec![Reverse(Mon::zero())],
             r: r.clone(),
@@ -268,6 +268,16 @@ fn one_id_of_mul_zero_is_zero() {
 impl std::ops::MulAssign<Poly> for Temp {
     fn mul_assign(&mut self, other: Poly) {
         *self = self.clone() * other;
+    }
+}
+
+impl std::ops::Neg for Temp {
+    type Output = Temp;
+    fn neg(mut self) -> Temp {
+        for m in &mut self.mons {
+            m.0.coef *= -C::one();
+        }
+        self
     }
 }
 
