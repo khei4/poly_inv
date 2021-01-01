@@ -32,11 +32,9 @@ mod tests {
         let y2 = Var::new(3);
         let y3 = Var::new(4);
         let r = Ring::new(vec![x1, x2, y1, y2, y3]);
-
         /*
             Initial Assignment
         */
-
         let p1y1 = Poly::zero(&r);
         let p2y2 = Poly::zero(&r);
         let p3y3 = Poly::from((vec![Mon::from(vec![(x1, 1)])], &r));
@@ -91,8 +89,9 @@ mod tests {
         let c = Expr::Seq {
             exprs: vec![c_init, c_if],
         };
-
-        println!("{:?}", gen_con(&c, PIdeal::most_gen(2, &r), Cs::new()));
+        let (i, c) = gen_con(&c, PIdeal::most_gen(2, &r), Cs::new());
+        let c = c.add(Constraint(i, PIdeal::zero(&r)));
+        println!("{:?}", c);
     }
 
     #[test]
@@ -197,6 +196,9 @@ mod tests {
             exprs: vec![c_init, w],
         };
 
-        println!("{:?}", gen_con(&c, PIdeal::most_gen(2, &r), Cs::new()));
+        let (i, c) = gen_con_less_precise(&c, PIdeal::most_gen(2, &r), Cs::new());
+        let c = c.add(Constraint(i, PIdeal::zero(&r)));
+        let le = LinearEquations::from((c, &r));
+        println!("{}", le);
     }
 }
