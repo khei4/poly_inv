@@ -25,6 +25,8 @@ impl std::fmt::Debug for ParTerm {
             res = format!("{}", self.coef);
         } else if self.coef == C::one() {
             res = format!("{:?}", self.par.expect("par debug failed"));
+        } else if self.coef == -C::one() {
+            res = format!("-{:?}", self.par.expect("par debug failed"));
         } else {
             res = format!("{}{:?}", self.coef, self.par.expect("par debug failed"));
         }
@@ -70,7 +72,6 @@ impl std::cmp::PartialOrd for ParTerm {
 impl std::cmp::Ord for ParTerm {
     fn cmp(&self, rhs: &Self) -> std::cmp::Ordering {
         self.par.cmp(&rhs.par)
-        // .then_with(|| self.coef.partial_cmp(&rhs.coef).expect("ParTerm coefficient is NaN"))
     }
 }
 
@@ -110,6 +111,7 @@ pub struct LinExp {
 
 impl std::fmt::Debug for LinExp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        assert!(0 < self.terms.len());
         let mut res = format!("{:?}", self.terms[0]);
         if !self.is_cnst() {
             for i in 1..self.terms.len() {
