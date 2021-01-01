@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::rc::Rc;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Poly {
     pub mons: Vec<Reverse<Mon<C>>>,
     pub r: Rc<RefCell<Ring>>,

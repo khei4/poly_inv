@@ -254,7 +254,6 @@ mod tests {
     use super::*;
     #[test]
     fn check_temp_add_poly_mul() {
-        use std::collections::HashMap;
         // Init Ring
         let x: Var = Var::new('x');
         let y = Var::new('y');

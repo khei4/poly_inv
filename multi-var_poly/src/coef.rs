@@ -223,6 +223,14 @@ impl std::ops::AddAssign<LinExp> for LinExp {
     }
 }
 
+impl std::ops::Mul<LinExp> for LinExp {
+    type Output = LinExp;
+    fn mul(self, _other: LinExp) -> Self::Output {
+        unreachable!();
+        // self
+    }
+}
+
 impl std::ops::Add<C> for LinExp {
     type Output = LinExp;
 
@@ -247,16 +255,6 @@ impl std::ops::AddAssign<C> for LinExp {
         *self = self.clone() + rhs;
     }
 }
-
-impl std::ops::Mul<LinExp> for LinExp {
-    type Output = LinExp;
-
-    fn mul(self, _other: LinExp) -> Self::Output {
-        unreachable!();
-        // self
-    }
-}
-
 impl std::ops::Mul<C> for LinExp {
     type Output = LinExp;
 

@@ -3,22 +3,21 @@ use super::mon::*;
 use super::poly::*;
 use super::ring::*;
 
-#[derive(Debug, Clone)]
-struct Pred {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Pred {
     p: Poly,
     eq: bool, // true == '=', false == '≠'
 }
 
-#[derive(Debug, Clone)]
-enum Expr {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Expr {
     Ass {
         lv: Var,
         rv: Poly,
     },
     Skip,
     Seq {
-        first: Box<Expr>,
-        second: Box<Expr>,
+        exprs: Vec<Expr>,
     },
     If {
         guard: Pred,
@@ -52,20 +51,20 @@ fn mannadiv_sample() {
     let pc13y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
     // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
     let c1 = Expr::Seq {
-        first: Box::new(Expr::Ass {
-            lv: Var::new('x'),
-            rv: pc11y1,
-        }),
-        second: Box::new(Expr::Seq {
-            first: Box::new(Expr::Ass {
+        exprs: vec![
+            Expr::Ass {
+                lv: Var::new('x'),
+                rv: pc11y1,
+            },
+            Expr::Ass {
                 lv: Var::new('y'),
                 rv: pc12y2,
-            }),
-            second: Box::new(Expr::Ass {
+            },
+            Expr::Ass {
                 lv: Var::new('z'),
                 rv: pc13y3,
-            }),
-        }),
+            },
+        ],
     };
 
     // let c_while = If {
