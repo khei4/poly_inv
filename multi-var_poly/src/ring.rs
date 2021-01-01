@@ -40,6 +40,8 @@ pub struct Ring {
     pub vars: HashMap<Var, String>,
     pub pars: HashSet<Par>,
 }
+
+// TODO: これって, Setのメンバー全部に可換なの？？
 impl Hash for Ring {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.vars
