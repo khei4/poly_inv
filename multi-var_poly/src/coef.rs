@@ -15,7 +15,7 @@ pub type C = Rational64;
 #[derive(Clone, Copy, PartialEq, Hash)]
 pub struct ParTerm {
     pub par: Option<Par>,
-    coef: C,
+    pub coef: C,
 }
 
 impl std::fmt::Debug for ParTerm {
@@ -43,13 +43,16 @@ impl ParTerm {
             coef: C::zero(),
         }
     }
+    pub fn is_zero(self) -> bool {
+        self == ParTerm::zero()
+    }
     fn one() -> Self {
         ParTerm {
             par: None,
             coef: C::one(),
         }
     }
-    fn is_cnst(self) -> bool {
+    pub fn is_cnst(self) -> bool {
         self.par.is_none()
     }
 }
@@ -68,10 +71,20 @@ impl std::cmp::PartialOrd for ParTerm {
         Some(self.cmp(rhs))
     }
 }
-// 辞書式
+// 辞書式 かつ, 0が最小
 impl std::cmp::Ord for ParTerm {
     fn cmp(&self, rhs: &Self) -> std::cmp::Ordering {
-        self.par.cmp(&rhs.par)
+        if self.is_cnst() && rhs.is_cnst() {
+            if self.is_zero() {
+                std::cmp::Ordering::Less
+            } else if rhs.is_zero() {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        } else {
+            self.par.cmp(&rhs.par)
+        }
     }
 }
 
@@ -93,15 +106,23 @@ impl std::ops::MulAssign<C> for ParTerm {
 #[test]
 fn parterm_ord_test() {
     // ParTermのオーダーは辞書順
+    // var is lexicographic
     let a = ParTerm::from(Par::new(0));
     let c = ParTerm::from(Par::new(2));
     let a = a * C::new(8, 1);
     assert!(a < c);
+
+    // cnst < var
+    let z = ParTerm::zero();
+    assert!(z < a);
+    let o = ParTerm::one();
+    assert!(o < a);
+    // zero is minimum
+    assert!(z < o);
 }
 
 /*
 Linear Expressions of Parameter (by Vec)
-TODO: Debug trait
 */
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Hash)]
@@ -152,7 +173,8 @@ impl LinExp {
             self.terms.push(z);
         }
     }
-    fn is_cnst(&self) -> bool {
+    pub fn is_cnst(&self) -> bool {
+        assert!(0 < self.terms.len());
         self.terms.len() == 1 && self.terms[0].par.is_none()
     }
 }
@@ -283,6 +305,16 @@ impl std::ops::MulAssign<C> for LinExp {
     }
 }
 
+impl std::ops::Neg for LinExp {
+    type Output = LinExp;
+    fn neg(mut self) -> LinExp {
+        for t in &mut self.terms {
+            t.coef *= -C::one();
+        }
+        self
+    }
+}
+
 #[test]
 fn linexp_ops_test() {
     let threea = ParTerm::from(Par::new(0)) * C::new(3, 1);
@@ -315,6 +347,7 @@ pub trait Coef:
     + std::ops::Add<C, Output = Self>
     + std::ops::AddAssign<Self>
     + std::ops::AddAssign<C>
+    + std::ops::Neg<Output = Self>
     + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<C, Output = Self>
     + std::ops::MulAssign<C>
