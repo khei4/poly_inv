@@ -337,6 +337,9 @@ mod tests {
 
     #[test]
     fn check_mannadiv_poly() {
+        /*
+            Devide concrete polynomial invariant by guard, assignment polynomials
+        */
         // Init Ring
         // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
         let x1 = Var::new('v');
