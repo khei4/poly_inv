@@ -27,7 +27,7 @@ impl PIdeal {
     }
     pub fn most_gen(d: usize, r: &Rc<RefCell<Ring>>) -> PIdeal {
         let mut gens = HashSet::new();
-        gens.insert(Temp::most_gen(d, r.clone()));
+        gens.insert(Temp::most_gen(d, r));
         PIdeal { gens }
     }
 }

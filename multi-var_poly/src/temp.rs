@@ -35,8 +35,9 @@ impl std::cmp::Ord for Temp {
     }
 }
 
+// TODO: ordテスト
 // #[test]
-// fn tempOrdtest
+// fn temprdtest
 
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -54,16 +55,16 @@ impl std::fmt::Debug for Temp {
 
 // constructers
 impl Temp {
-    fn zero(r: Rc<RefCell<Ring>>) -> Temp {
+    fn zero(r: &Rc<RefCell<Ring>>) -> Temp {
         Temp {
             mons: vec![Reverse(Mon::zero())],
-            r,
+            r: r.clone(),
         }
     }
-    fn one(r: Rc<RefCell<Ring>>) -> Temp {
+    fn one(r: &Rc<RefCell<Ring>>) -> Temp {
         Temp {
             mons: vec![Reverse(Mon::one())],
-            r,
+            r: r.clone(),
         }
     }
 }
@@ -71,14 +72,14 @@ impl Temp {
 #[test]
 fn zero_is_identity_of_add() {
     let r = Ring::new(vec![]);
-    assert!(Temp::one(r.clone()) + Temp::zero(r.clone()) == Temp::one(r.clone()));
-    assert!(Temp::zero(r.clone()) + Temp::one(r.clone()) == Temp::one(r.clone()));
-    assert!(Temp::zero(r.clone()) + Temp::zero(r.clone()) == Temp::zero(r.clone()));
+    assert!(Temp::one(&r) + Temp::zero(&r) == Temp::one(&r));
+    assert!(Temp::zero(&r) + Temp::one(&r) == Temp::one(&r));
+    assert!(Temp::zero(&r) + Temp::zero(&r) == Temp::zero(&r));
 }
 
 // construct Temp with extend Rings
-impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
-    fn from(a: (Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)) -> Self {
+impl From<(Vec<Mon<LinExp>>, &Rc<RefCell<Ring>>)> for Temp {
+    fn from(a: (Vec<Mon<LinExp>>, &Rc<RefCell<Ring>>)) -> Self {
         let (a, r) = a;
         let mut mons = vec![];
         for m in a {
@@ -93,7 +94,7 @@ impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
         if mons.len() == 0 {
             mons.push(Reverse(Mon::zero()));
         }
-        let mut p = Temp { mons, r };
+        let mut p = Temp { mons, r: r.clone() };
         p.sort_sumup();
         p
     }
@@ -150,7 +151,7 @@ impl Temp {
         m.0.vars.iter().fold(0, |s, (_, v)| s + v)
     }
 
-    pub fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
+    pub fn most_gen(d: usize, r: &Rc<RefCell<Ring>>) -> Temp {
         let v: Vec<Var> = r
             .borrow_mut()
             .vars
@@ -181,19 +182,19 @@ impl Temp {
         }
         r.borrow_mut().pextend(fresh_pars);
         mons.sort();
-        Temp { mons, r: r }
+        Temp { mons, r: r.clone() }
     }
 
     pub fn rem_par(&self, other: Poly) -> Temp {
         let diff = self.tdeg() - other.tdeg();
-        let q = Temp::most_gen(diff, self.r.clone());
+        let q = Temp::most_gen(diff, &self.r);
         q * (-other) + self.clone()
     }
 
     pub fn subs(mut self, v: Var, other: Poly) -> Temp {
         self.sort_by_var(v);
-        let mut res = Temp::zero(self.r.clone());
-        let mut base = Poly::one(self.r.clone());
+        let mut res = Temp::zero(&self.r);
+        let mut base = Poly::one(&self.r);
         let mut cur = 0;
         for m in &mut self.mons {
             match m.0.vars.remove(&v) {
@@ -206,7 +207,7 @@ impl Temp {
                 }
                 None => (),
             }
-            res += Temp::from((vec![m.0.clone()], self.r.clone())) * base.clone();
+            res += Temp::from((vec![m.0.clone()], &self.r)) * base.clone();
         }
         res
     }
@@ -232,7 +233,7 @@ impl std::ops::Mul<Poly> for Temp {
     type Output = Temp;
     fn mul(mut self, other: Poly) -> Self::Output {
         if other.is_zero() || self.is_zero() {
-            Temp::zero(self.r.clone())
+            Temp::zero(&self.r)
         } else {
             let mut new_terms: Vec<Reverse<Mon<LinExp>>> = vec![];
             for m in &other.mons {
@@ -241,7 +242,7 @@ impl std::ops::Mul<Poly> for Temp {
                 }
             }
             if new_terms.len() == 0 {
-                Temp::zero(self.r.clone())
+                Temp::zero(&self.r)
             } else {
                 self.mons = new_terms;
                 self.sort_sumup();
@@ -254,13 +255,13 @@ impl std::ops::Mul<Poly> for Temp {
 #[test]
 fn one_id_of_mul_zero_is_zero() {
     let r = Ring::new(vec![]);
-    assert!(Temp::one(r.clone()) * Poly::zero(r.clone()) == Temp::zero(r.clone()));
+    assert!(Temp::one(&r) * Poly::zero(&r) == Temp::zero(&r));
     println!("T 1 * P 0 = T 0");
-    assert!(Temp::zero(r.clone()) * Poly::one(r.clone()) == Temp::zero(r.clone()));
+    assert!(Temp::zero(&r) * Poly::one(&r) == Temp::zero(&r));
     println!("T 0 * P 1 = T 0");
-    assert!(Temp::one(r.clone()) * Poly::one(r.clone()) == Temp::one(r.clone()));
+    assert!(Temp::one(&r) * Poly::one(&r) == Temp::one(&r));
     println!("T 1 * P 1 = T 1");
-    assert!(Temp::zero(r.clone()) * Poly::zero(r.clone()) == Temp::zero(r.clone()));
+    assert!(Temp::zero(&r) * Poly::zero(&r) == Temp::zero(&r));
     println!("T 0 * P 0 = T 0");
 }
 
@@ -291,8 +292,8 @@ mod tests {
         let dxy: Mon<LinExp> = Mon::from((pars[3], vec![(x, 1), (y, 1)]));
         let y2: Mon<LinExp> = Mon::from((pars[3], vec![(y, 2)]));
         let yz: Mon<LinExp> = Mon::from((pars[0], vec![(y, 1), (z, 1)]));
-        let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
-        let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
+        let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], &r));
+        let p2 = Temp::from((vec![bx2, dxy, y2], &r));
         // もれなくだぶりなく拡張されている
         assert!(r.as_ref().borrow().pars == pars.into_iter().collect());
         assert!(p1.tdeg() == 2);
@@ -304,8 +305,8 @@ mod tests {
 
         let p1 = p1 + p2;
 
-        assert!(p1.clone() == p1.clone() + Temp::zero(r.clone()));
-        assert!(p1.clone() == Temp::zero(r.clone()) + p1.clone());
+        assert!(p1.clone() == p1.clone() + Temp::zero(&r));
+        assert!(p1.clone() == Temp::zero(&r) + p1.clone());
 
         // Monomials, Polynomials
         let x2: Mon<C> = Mon::from(vec![(x, 2)]);
@@ -313,7 +314,7 @@ mod tests {
         let y2: Mon<C> = Mon::from(vec![(y, 2)]);
         let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
         let twelve: Mon<C> = Mon::one() * C::new(12, 1);
-        let p2 = Poly::from((vec![x2, yz, xy, y2, twelve], r.clone()));
+        let p2 = Poly::from((vec![x2, yz, xy, y2, twelve], &r));
 
         /*
             Multiplication test
@@ -336,7 +337,7 @@ mod tests {
         /*
             Most Generic Template
         */
-        let p1 = Temp::most_gen(2, r.clone());
+        let p1 = Temp::most_gen(2, &r);
         // 3 variable, 2 degree => 4H2 == 5C2 == 10
         assert!(r.as_ref().borrow().pars.len() == 10);
         println!("{:?}", p1);
@@ -348,7 +349,7 @@ mod tests {
         let y2: Mon<C> = Mon::from(vec![(y, 2)]);
         let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
         let twelve: Mon<C> = Mon::one() * C::new(12, 1);
-        let p2 = Poly::from((vec![x2, yz, y2, twelve], r.clone()));
+        let p2 = Poly::from((vec![x2, yz, y2, twelve], &r));
 
         /*
             Substitution Test
@@ -377,27 +378,21 @@ mod tests {
         let m2: Mon<LinExp> = Mon::from(vec![(y2, 1)]);
         let m3: Mon<LinExp> = Mon::from(vec![(y3, 1)]);
         let m4: Mon<LinExp> = Mon::from(vec![(x1, 1)]) * -C::one();
-        let g_inv = Temp::from((vec![m1, m2, m3, m4], r.clone()));
+        let g_inv = Temp::from((vec![m1, m2, m3, m4], &r));
 
         // guard polynomial
         // p = x2-y2-1
         let m1: Mon<C> = Mon::from(vec![(x2, 1)]);
         let m2: Mon<C> = Mon::from(vec![(y2, 1)]) * -C::one();
         let n_one: Mon<C> = Mon::one() * -C::one();
-        let p = Poly::from((vec![m1, m2, n_one], r.clone()));
+        let p = Poly::from((vec![m1, m2, n_one], &r));
 
         // subs poly pcxyVn => cx's y-th substitution to Vn variable
-        let pc11y1 = Poly::from((vec![Mon::from(vec![(y1, 1)]), Mon::one()], r.clone()));
-        let pc12y2 = Poly::zero(r.clone());
-        let pc13y3 = Poly::from((
-            vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
-            r.clone(),
-        ));
-        let pc21y2 = Poly::from((vec![Mon::from(vec![(y2, 1)]), Mon::one()], r.clone()));
-        let pc22y3 = Poly::from((
-            vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
-            r.clone(),
-        ));
+        let pc11y1 = Poly::from((vec![Mon::from(vec![(y1, 1)]), Mon::one()], &r));
+        let pc12y2 = Poly::zero(&r);
+        let pc13y3 = Poly::from((vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()], &r));
+        let pc21y2 = Poly::from((vec![Mon::from(vec![(y2, 1)]), Mon::one()], &r));
+        let pc22y3 = Poly::from((vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()], &r));
         let c1g = {
             let subs1 = {
                 let subs2 = {
@@ -427,9 +422,9 @@ mod tests {
 
         // last substitution
         // pxVn => x-th substitution to Vn
-        let p1y1 = Poly::zero(r.clone());
-        let p2y2 = Poly::zero(r.clone());
-        let p3y3 = Poly::from((vec![Mon::from(vec![(x1, 1)])], r.clone()));
+        let p1y1 = Poly::zero(&r);
+        let p2y2 = Poly::zero(&r);
+        let p3y3 = Poly::from((vec![Mon::from(vec![(x1, 1)])], &r));
         let g1 = {
             let subs1 = {
                 let subs2 = {

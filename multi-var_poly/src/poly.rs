@@ -29,10 +29,10 @@ impl std::fmt::Debug for Poly {
 
 // constructors
 impl Poly {
-    pub fn one(r: Rc<RefCell<Ring>>) -> Poly {
+    pub fn one(r: &Rc<RefCell<Ring>>) -> Poly {
         Poly::from((vec![Mon::<C>::one()], r))
     }
-    pub fn zero(r: Rc<RefCell<Ring>>) -> Poly {
+    pub fn zero(r: &Rc<RefCell<Ring>>) -> Poly {
         Poly::from((vec![Mon::<C>::zero()], r))
     }
 }
@@ -40,16 +40,19 @@ impl Poly {
 #[test]
 fn test_zero() {
     let r = Ring::new(vec![]);
-    println!("{:?}", Poly::zero(r.clone()));
+    println!("{:?}", Poly::zero(&r));
 }
 
-impl From<(Vec<Mon<C>>, Rc<RefCell<Ring>>)> for Poly {
-    fn from(a: (Vec<Mon<C>>, Rc<RefCell<Ring>>)) -> Self {
+impl From<(Vec<Mon<C>>, &Rc<RefCell<Ring>>)> for Poly {
+    fn from(a: (Vec<Mon<C>>, &Rc<RefCell<Ring>>)) -> Self {
         let mut mons = vec![];
         for m in a.0 {
             mons.push(Reverse(m));
         }
-        let mut p = Poly { mons, r: a.1 };
+        let mut p = Poly {
+            mons,
+            r: a.1.clone(),
+        };
         p.sort_sumup();
         p
     }
@@ -95,7 +98,7 @@ impl Poly {
 
     pub fn pow(&self, mut e: usize) -> Poly {
         let mut base = self.clone();
-        let mut res = Poly::from((vec![Mon::one()], self.r.clone()));
+        let mut res = Poly::from((vec![Mon::one()], &self.r));
         while e > 0 {
             if e & 1 == 1 {
                 res *= base.clone();
@@ -119,7 +122,7 @@ fn check_poly_pow() {
     let x2: Mon<C> = Mon::from(vec![(x, 2)]);
     let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
     let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
-    let p1 = Poly::from((vec![x2], r.clone()));
+    let p1 = Poly::from((vec![x2], &r));
     println!("{:?}", p1.pow(5));
 }
 
@@ -186,9 +189,9 @@ fn check_poly_addition() {
     let y2: Mon<C> = Mon::from(vec![(y, 2)]);
     let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
     let twelve: Mon<C> = Mon::one() * C::new(12, 1);
-    let p1 = Poly::from((vec![x2, yz, twelve.clone()], r.clone()));
-    let p2 = Poly::from((vec![xy, y2, twelve], r.clone()));
-    let p3 = Poly::from((vec![], r.clone()));
+    let p1 = Poly::from((vec![x2, yz, twelve.clone()], &r));
+    let p2 = Poly::from((vec![xy, y2, twelve], &r));
+    let p3 = Poly::from((vec![], &r));
     assert!(p1.tdeg() == 2);
     assert!(p2.tdeg() == 2);
     let a = p1 + p2;
