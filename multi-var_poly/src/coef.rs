@@ -177,6 +177,9 @@ impl Zero for LinExp {
 impl From<Vec<ParTerm>> for LinExp {
     fn from(mut terms: Vec<ParTerm>) -> Self {
         terms.sort();
+        if terms.len() == 0 {
+            terms = vec![ParTerm::zero()];
+        }
         LinExp { terms }
     }
 }
@@ -207,6 +210,7 @@ impl std::ops::Add<LinExp> for LinExp {
             }
         }
         self.terms.sort_by(|x, y| y.cmp(&x));
+        println!("{:?}", self.terms);
         while let Some(m) = self.terms.pop() {
             if m != z {
                 self.terms.push(m);
@@ -214,6 +218,9 @@ impl std::ops::Add<LinExp> for LinExp {
             }
         }
         self.terms.sort();
+        if self.terms.len() == 0 {
+            self.terms.push(z);
+        }
         self
     }
 }
