@@ -82,9 +82,6 @@ impl Cs {
     }
     fn union(mut self, other: Cs) -> Cs {
         self.items.extend(other.items);
-        // TODO: 重複は一旦許す
-        // self.items.sort();
-        // self.items.dedup();
         self
     }
 
