@@ -62,18 +62,15 @@ impl From<(Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)> for Temp {
     fn from(a: (Vec<Mon<LinExp>>, Rc<RefCell<Ring>>)) -> Self {
         let (a, r) = a;
         let mut mons = vec![];
-        // TODO: parametersをSetにする.
         for m in a {
             for pt in &m.coef.terms {
                 match pt.par {
-                    Some(p) => r.borrow_mut().pars.push(p),
+                    Some(p) => drop(r.borrow_mut().pars.insert(p)),
                     None => (),
                 }
             }
             mons.push(Reverse(m));
         }
-        r.borrow_mut().pars.sort();
-        r.borrow_mut().pars.dedup();
         if mons.len() == 0 {
             mons.push(Reverse(Mon::zero()));
         }
@@ -135,7 +132,13 @@ impl Temp {
     }
 
     fn most_gen(d: usize, r: Rc<RefCell<Ring>>) -> Temp {
-        let v = r.borrow_mut().vars.clone();
+        let v: Vec<Var> = r
+            .borrow_mut()
+            .vars
+            .clone()
+            .into_iter()
+            .map(|(_s, v)| v)
+            .collect();
         let mut cnt = r.borrow().pars.len();
         let mut fresh_pars = vec![];
         let mut mons = vec![];
@@ -145,7 +148,6 @@ impl Temp {
                 let fp = Par::new(cnt);
                 cnt += 1;
                 fresh_pars.push(fp);
-                // varsのマップを作る
                 let mut m: std::collections::HashMap<Var, usize> = std::collections::HashMap::new();
                 for v in c {
                     match m.get_mut(&v) {
@@ -272,7 +274,7 @@ mod tests {
         let p1 = Temp::from((vec![ax2, cxy, yz, y2.clone()], r.clone()));
         let p2 = Temp::from((vec![bx2, dxy, y2], r.clone()));
         // もれなくだぶりなく拡張されている
-        assert!(r.as_ref().borrow().pars == pars);
+        assert!(r.as_ref().borrow().pars == pars.into_iter().collect());
         assert!(p1.tdeg() == 2);
         assert!(p2.tdeg() == 2);
 

@@ -31,32 +31,38 @@ impl std::fmt::Debug for Par {
     }
 }
 
-// TODO: vars, ParをMapで持つ
 use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
-#[derive(Eq, PartialEq, Clone, Debug, Hash)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Ring {
-    pub vars: Vec<Var>,
-    pub pars: Vec<Par>,
+    pub vars: HashMap<String, Var>,
+    pub pars: HashSet<Par>,
+}
+impl Hash for Ring {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.vars
+            .clone()
+            .into_iter()
+            .collect::<Vec<(String, Var)>>()
+            .hash(state);
+        self.pars
+            .clone()
+            .into_iter()
+            .collect::<Vec<Par>>()
+            .hash(state);
+    }
 }
 
 impl Ring {
     pub fn new(a: Vec<Var>) -> Rc<RefCell<Ring>> {
         Rc::new(RefCell::new(Ring {
-            vars: a,
-            pars: vec![],
+            vars: a.iter().map(|v| (v.id.to_string(), *v)).collect(),
+            pars: HashSet::new(),
         }))
     }
     pub fn pextend(&mut self, new_pars: Vec<Par>) {
         self.pars.extend(new_pars);
-    }
-}
-
-impl From<Vec<Var>> for Ring {
-    fn from(a: Vec<Var>) -> Ring {
-        Ring {
-            vars: a,
-            pars: vec![],
-        }
     }
 }

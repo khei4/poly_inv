@@ -112,7 +112,7 @@ fn check_poly_pow() {
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
-    let r = Rc::new(RefCell::new(Ring::from(vars)));
+    let r = Ring::new(vars);
 
     // Monomials, Polynomials
     let x2: Mon<C> = Mon::from(vec![(x, 2)]);
@@ -177,7 +177,7 @@ fn check_poly_addition() {
     let y = Var::new('y');
     let z = Var::new('z');
     let vars = vec![x, y, z];
-    let r = Rc::new(RefCell::new(Ring::from(vars)));
+    let r = Ring::new(vars);
 
     let x2: Mon<C> = Mon::from(vec![(x, 2)]);
     let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
