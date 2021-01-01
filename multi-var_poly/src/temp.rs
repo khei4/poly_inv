@@ -41,12 +41,12 @@ impl std::cmp::Ord for Temp {
 
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let mut res = format!("{:?}", self.mons[0].0);
+        let mut res = format!("{}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef >= LinExp::zero() {
-                res = format!("{}+{:?}", res, self.mons[i].0);
+                res = format!("{}+{}", res, self.mons[i].0);
             } else {
-                res = format!("{}-{:?}", res, self.mons[i].0);
+                res = format!("{}-{}", res, self.mons[i].0);
             }
         }
         write!(f, "{}", res)

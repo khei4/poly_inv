@@ -15,12 +15,12 @@ pub struct Poly {
 impl std::fmt::Debug for Poly {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         assert!(0 < self.mons.len());
-        let mut res = format!("{:?}", self.mons[0].0);
+        let mut res = format!("{}", self.mons[0].0);
         for i in 1..self.mons.len() {
             if self.mons[i].0.coef > C::zero() {
-                res = format!("{}+{:?}", res, self.mons[i].0);
+                res = format!("{}+{}", res, self.mons[i].0);
             } else {
-                res = format!("{}{:?}", res, self.mons[i].0);
+                res = format!("{}{}", res, self.mons[i].0);
             }
         }
         write!(f, "{}", res)

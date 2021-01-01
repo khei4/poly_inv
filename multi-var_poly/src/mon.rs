@@ -31,6 +31,43 @@ impl<T: Coef> Hash for Mon<T> {
     }
 }
 
+impl<T: Coef> std::fmt::Display for Mon<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut res: String;
+        if self.is_cnst() {
+            res = format!("{:?}", self.coef);
+        } else {
+            if self.coef == T::one() {
+                res = String::new();
+            } else if self.coef == -T::one() {
+                res = String::from("-");
+            } else if self.coef == T::zero() {
+                panic!("zero term printed!")
+            } else {
+                res = String::from(format!("{:?}", self.coef));
+            }
+
+            {
+                let mut resv = vec![];
+                for (v, d) in self.vars.iter() {
+                    resv.push((v, d));
+                }
+                resv.sort();
+                // TODO: Ringを参照したいけど,ここまでとどかない, 単項式にも環をもたせる？？？
+                // もしくは変数にStringをもたせちゃうか, Cloneはできなくなるけど
+                for (v, d) in resv {
+                    if *d != 1 {
+                        res = format!("{}{}^{}", res, self.r.borrow().vars[v], d);
+                    } else {
+                        res = format!("{}{}", res, self.r.borrow().vars[v]);
+                    }
+                }
+            }
+        }
+        write!(f, "{}", res)
+    }
+}
+
 impl<T: Coef> std::fmt::Debug for Mon<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut res: String;
@@ -115,15 +152,6 @@ impl<T: Coef> From<(Vec<(Var, usize)>, &Rc<RefCell<Ring>>)> for Mon<T> {
         }
     }
 }
-
-// impl<T: Coef> From<HashMap<Var, usize>> for Mon<T> {
-//     fn from(m: HashMap<Var, usize>) -> Self {
-//         Mon {
-//             vars: m,
-//             coef: T::one(),
-//         }
-//     }
-// }
 
 impl From<(Par, HashMap<Var, usize>, &Rc<RefCell<Ring>>)> for Mon<LinExp> {
     fn from(pmr: (Par, HashMap<Var, usize>, &Rc<RefCell<Ring>>)) -> Self {
