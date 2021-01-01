@@ -36,13 +36,23 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
             res = format!("{:?}", self.coef);
         } else {
             // TODO: coefの-1の分岐
-            if T::zero() <= self.coef && self.coef != T::one() {
-                res = String::from(format!("{:?}", self.coef));
-            } else if self.coef < T::zero() {
-                res = String::from(format!("{:?}", self.coef));
-            } else {
+            if self.coef == T::one() {
                 res = String::new();
+            } else if self.coef == -T::one() {
+                res = String::from("-");
+            } else if self.coef == T::zero() {
+                panic!("zero term printed!")
+            } else {
+                res = String::from(format!("{:?}", self.coef));
             }
+
+            // if T::zero() <= self.coef && self.coef != T::one() {
+            //     res = String::from(format!("{:?}", self.coef));
+            // } else if self.coef < T::zero() {
+            //     res = String::from(format!("{:?}", self.coef));
+            // } else {
+            //     res = String::new();
+            // }
 
             {
                 let mut resv = vec![];
