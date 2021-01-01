@@ -345,51 +345,35 @@ mod tests {
         let y1 = Var::new('x');
         let y2 = Var::new('y');
         let y3 = Var::new('z');
-
         let r = Ring::new(vec![x1, x2, y1, y2, y3]);
         // Init Invariant (Template)
         // y1*x2 + y2 + y3 - x1 = 0
-        let mut md1 = HashMap::new();
-        md1.insert(y1, 1);
-        md1.insert(x2, 1);
-        let mut md2 = HashMap::new();
-        md2.insert(y2, 1);
-        let mut md3 = HashMap::new();
-        md3.insert(y3, 1);
-        let mut md4 = HashMap::new();
-        md4.insert(x1, 1);
 
-        let m1: Mon<LinExp> = Mon::from(md1);
-        let m2: Mon<LinExp> = Mon::from(md2);
-        let m3: Mon<LinExp> = Mon::from(md3);
-        let m4: Mon<LinExp> = Mon::from(md4) * -C::one();
+        let m1: Mon<LinExp> = Mon::from(vec![(y1, 1), (x2, 1)]);
+        let m2: Mon<LinExp> = Mon::from(vec![(y2, 1)]);
+        let m3: Mon<LinExp> = Mon::from(vec![(y3, 1)]);
+        let m4: Mon<LinExp> = Mon::from(vec![(x1, 1)]) * -C::one();
         let g_inv = Temp::from((vec![m1, m2, m3, m4], r.clone()));
 
         // guard polynomial
         // p = x2-y2-1
-        let mut md1 = HashMap::new();
-        md1.insert(x2, 1);
-        let mut md2 = HashMap::new();
-        md2.insert(y2, 1);
-        let m1: Mon<C> = Mon::from(md1);
-        let m2: Mon<C> = Mon::from(md2) * -C::one();
+        let m1: Mon<C> = Mon::from(vec![(x2, 1)]);
+        let m2: Mon<C> = Mon::from(vec![(y2, 1)]) * -C::one();
         let n_one: Mon<C> = Mon::one() * -C::one();
         let p = Poly::from((vec![m1, m2, n_one], r.clone()));
 
         // subs poly pcxyVn => cx's y-th substitution to Vn variable
-        let mut m = HashMap::new();
-        m.insert(y1, 1);
-        let pc11y1 = Poly::from((vec![Mon::from(m), Mon::one()], r.clone()));
+        let pc11y1 = Poly::from((vec![Mon::from(vec![(y1, 1)]), Mon::one()], r.clone()));
         let pc12y2 = Poly::zero(r.clone());
-        let mut m = HashMap::new();
-        m.insert(y3, 1);
-        let pc13y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
-        let mut m = HashMap::new();
-        m.insert(y2, 1);
-        let pc21y2 = Poly::from((vec![Mon::from(m), Mon::one()], r.clone()));
-        let mut m = HashMap::new();
-        m.insert(y3, 1);
-        let pc22y3 = Poly::from((vec![Mon::from(m), Mon::one() * -C::one()], r.clone()));
+        let pc13y3 = Poly::from((
+            vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
+            r.clone(),
+        ));
+        let pc21y2 = Poly::from((vec![Mon::from(vec![(y2, 1)]), Mon::one()], r.clone()));
+        let pc22y3 = Poly::from((
+            vec![Mon::from(vec![(y3, 1)]), Mon::one() * -C::one()],
+            r.clone(),
+        ));
         let c1g = {
             let subs1 = {
                 let subs2 = {
@@ -424,9 +408,7 @@ mod tests {
         // pxVn => x-th substitution to Vn
         let p1y1 = Poly::zero(r.clone());
         let p2y2 = Poly::zero(r.clone());
-        let mut m = HashMap::new();
-        m.insert(x1, 1);
-        let p3y3 = Poly::from((vec![Mon::from(m)], r.clone()));
+        let p3y3 = Poly::from((vec![Mon::from(vec![(x1, 1)])], r.clone()));
         let g1 = {
             let subs1 = {
                 let subs2 = {
