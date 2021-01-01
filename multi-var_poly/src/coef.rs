@@ -210,7 +210,6 @@ impl std::ops::Add<LinExp> for LinExp {
             }
         }
         self.terms.sort_by(|x, y| y.cmp(&x));
-        println!("{:?}", self.terms);
         while let Some(m) = self.terms.pop() {
             if m != z {
                 self.terms.push(m);
