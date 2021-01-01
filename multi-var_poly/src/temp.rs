@@ -137,7 +137,7 @@ impl Temp {
             .vars
             .clone()
             .into_iter()
-            .map(|(_s, v)| v)
+            .map(|(v, _s)| v)
             .collect();
         let mut cnt = r.borrow().pars.len();
         let mut fresh_pars = vec![];
@@ -257,9 +257,10 @@ mod tests {
     #[test]
     fn check_temp_add_poly_mul() {
         // Init Ring
-        let x: Var = Var::new('x');
-        let y = Var::new('y');
-        let z = Var::new('z');
+        // 0 -> x, 1 -> y, 2 -> z
+        let x = Var::new(0);
+        let y = Var::new(1);
+        let z = Var::new(2);
         let r = Ring::new(vec![x, y, z]);
         // parameters
         let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
@@ -306,10 +307,10 @@ mod tests {
 
     #[test]
     fn check_subs_mostgen() {
-        // Init Ring
-        let x: Var = Var::new('x');
-        let y = Var::new('y');
-        let z = Var::new('z');
+        // 0 -> x, 1 -> y, 2 -> z
+        let x = Var::new(0);
+        let y = Var::new(1);
+        let z = Var::new(2);
         let r = Ring::new(vec![x, y, z]);
 
         // Init Template by
@@ -343,12 +344,12 @@ mod tests {
             Devide concrete polynomial invariant by guard, assignment polynomials
         */
         // Init Ring
-        // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
-        let x1 = Var::new('v');
-        let x2 = Var::new('w');
-        let y1 = Var::new('x');
-        let y2 = Var::new('y');
-        let y3 = Var::new('z');
+        // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
+        let x1 = Var::new(0);
+        let x2 = Var::new(1);
+        let y1 = Var::new(2);
+        let y2 = Var::new(3);
+        let y3 = Var::new(4);
         let r = Ring::new(vec![x1, x2, y1, y2, y3]);
         // Init Invariant (Template)
         // y1*x2 + y2 + y3 - x1 = 0

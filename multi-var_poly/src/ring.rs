@@ -1,16 +1,16 @@
 #[derive(Eq, PartialEq, PartialOrd, Ord, Clone, Copy, Hash)]
 pub struct Var {
-    pub id: char,
+    pub id: usize,
 }
 impl Var {
-    pub fn new(c: char) -> Var {
-        Var { id: c }
+    pub fn new(i: usize) -> Var {
+        Var { id: i }
     }
 }
 
 impl std::fmt::Debug for Var {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.id)
+        write!(f, "{}", (b'x' + self.id as u8) as char)
     }
 }
 
@@ -37,7 +37,7 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Ring {
-    pub vars: HashMap<String, Var>,
+    pub vars: HashMap<Var, String>,
     pub pars: HashSet<Par>,
 }
 impl Hash for Ring {
@@ -45,7 +45,7 @@ impl Hash for Ring {
         self.vars
             .clone()
             .into_iter()
-            .collect::<Vec<(String, Var)>>()
+            .collect::<Vec<(Var, String)>>()
             .hash(state);
         self.pars
             .clone()
@@ -58,11 +58,14 @@ impl Hash for Ring {
 impl Ring {
     pub fn new(a: Vec<Var>) -> Rc<RefCell<Ring>> {
         Rc::new(RefCell::new(Ring {
-            vars: a.iter().map(|v| (v.id.to_string(), *v)).collect(),
+            vars: a.iter().map(|v| (*v, v.id.to_string())).collect(),
             pars: HashSet::new(),
         }))
     }
     pub fn pextend(&mut self, new_pars: Vec<Par>) {
         self.pars.extend(new_pars);
+    }
+    pub fn vextend(&mut self, s: String) {
+        self.vars.insert(Var::new(self.vars.len()), s);
     }
 }

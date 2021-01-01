@@ -39,12 +39,12 @@ pub enum Expr {
 #[test]
 fn mannadiv_simple() {
     // Init Ring
-    // v -> x1, w -> x2, x -> y1, y -> y2, z -> y3
-    let x1 = Var::new('v');
-    let x2 = Var::new('w');
-    let y1 = Var::new('x');
-    let y2 = Var::new('y');
-    let y3 = Var::new('z');
+    // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
+    let x1 = Var::new(0);
+    let x2 = Var::new(1);
+    let y1 = Var::new(2);
+    let y2 = Var::new(3);
+    let y3 = Var::new(4);
     let r = Ring::new(vec![x1, x2, y1, y2, y3]);
 
     /*

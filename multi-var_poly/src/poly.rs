@@ -108,9 +108,10 @@ impl Poly {
 }
 #[test]
 fn check_poly_pow() {
-    let x = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
+    // 0 -> x, 1 -> y, 2 -> z
+    let x = Var::new(0);
+    let y = Var::new(1);
+    let z = Var::new(2);
     let vars = vec![x, y, z];
     let r = Ring::new(vars);
 
@@ -173,9 +174,10 @@ impl std::ops::MulAssign<Poly> for Poly {
 
 #[test]
 fn check_poly_addition() {
-    let x = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
+    // 0 -> x, 1 -> y, 2 -> z
+    let x = Var::new(0);
+    let y = Var::new(1);
+    let z = Var::new(2);
     let vars = vec![x, y, z];
     let r = Ring::new(vars);
 

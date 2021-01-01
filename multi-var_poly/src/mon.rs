@@ -49,11 +49,13 @@ impl<T: Coef> std::fmt::Debug for Mon<T> {
                     resv.push((v, d));
                 }
                 resv.sort();
+                // TODO: Ringを参照したいけど,ここまでとどかない, 単項式にも環をもたせる？？？
+                // もしくは変数にStringをもたせちゃうか, Cloneはできなくなるけど
                 for (v, d) in resv {
                     if *d != 1 {
-                        res = format!("{}{}{}", res, v.id, d);
+                        res = format!("{}{:?}{}", res, v, d);
                     } else {
-                        res = format!("{}{}", res, v.id);
+                        res = format!("{}{:?}", res, v);
                     }
                 }
             }
@@ -230,25 +232,18 @@ impl<T: Coef> std::cmp::Ord for Mon<T> {
 
 #[test]
 fn mon_ord_test() {
-    let x: Var = Var::new('x');
-    let y = Var::new('y');
-    let z = Var::new('z');
+    // Init Ring
+    // 0 -> x, 1 -> y, 2 -> z
+    let x = Var::new(0);
+    let y = Var::new(1);
+    let z = Var::new(2);
+    let vars = vec![x, y, z];
+    let r = Ring::new(vars);
 
-    let mut md1 = HashMap::new();
-    md1.insert(x, 2);
-    let mut md2 = HashMap::new();
-    md2.insert(x, 1);
-    md2.insert(y, 1);
-    let mut md3 = HashMap::new();
-    md3.insert(y, 2);
-    let mut md4 = HashMap::new();
-    md4.insert(y, 1);
-    md4.insert(z, 1);
-
-    let x2: Mon<C> = Mon::from(md1);
-    let xy: Mon<C> = Mon::from(md2);
-    let y2: Mon<C> = Mon::from(md3);
-    let yz: Mon<C> = Mon::from(md4);
+    let x2: Mon<C> = Mon::from(vec![(x, 2)]);
+    let xy: Mon<C> = Mon::from(vec![(x, 1), (y, 1)]);
+    let y2: Mon<C> = Mon::from(vec![(y, 2)]);
+    let yz: Mon<C> = Mon::from(vec![(y, 1), (z, 1)]);
     let eight = Mon::one() * C::new(8, 1);
     let z = Mon::zero();
     assert!(z < eight);
