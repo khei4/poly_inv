@@ -260,11 +260,14 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 #[test]
 fn zero_and_mostgen() {
     // 0 -> x, 1 -> y, 2 -> z
+    let r = Ring::new(vec![]);
+    r.borrow_mut().vextend(String::from("x0"));
     let x0 = Var::new(0);
+    r.borrow_mut().vextend(String::from("x1"));
     let x1 = Var::new(1);
+    r.borrow_mut().vextend(String::from("x2"));
     let x2 = Var::new(2);
     let vars = vec![x0, x1, x2];
-    let r = Ring::new(vars);
     let i = PIdeal::most_gen(1, &r);
 
     let mut a0x0: Mon<LinExp> = Mon::from((Par::new(0), vec![(x0, 1)], &r));
