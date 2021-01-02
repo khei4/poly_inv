@@ -66,7 +66,9 @@ impl Ring {
     pub fn pextend(&mut self, new_pars: Vec<Par>) {
         self.pars.extend(new_pars);
     }
-    pub fn vextend(&mut self, s: String) {
-        self.vars.insert(Var::new(self.vars.len()), s);
+    pub fn vextend(&mut self, s: String) -> Var {
+        let v = Var::new(self.vars.len());
+        self.vars.insert(v, s);
+        v
     }
 }
