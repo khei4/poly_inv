@@ -5,6 +5,7 @@ use super::ring::*;
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Reverse;
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 #[derive(PartialEq, Clone)]
@@ -34,10 +35,6 @@ impl std::cmp::Ord for Temp {
             .cmp(&self.mons.iter().min().expect("Temp T-degree Panic"))
     }
 }
-
-// TODO: ordテスト
-// #[test]
-// fn temprdtest
 
 impl std::fmt::Debug for Temp {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -210,6 +207,30 @@ impl Temp {
             res += Temp::from((vec![m.0.clone()], &self.r)) * base.clone();
         }
         res
+    }
+
+    pub fn subs_pars(&self, sol: Vec<(Par, LinExp)>) -> Temp {
+        let sol_map = sol.into_iter().collect::<HashMap<Par, LinExp>>();
+        // 各単項式の
+        let mut res_mons: Vec<Mon<LinExp>> = vec![];
+        for Reverse(m) in &self.mons {
+            // 各パラメーターに
+            for pt in &m.coef.terms {
+                let mut new_linexp;
+                match pt.par {
+                    Some(p) => new_linexp = sol_map[&p].clone() * pt.coef,
+                    None => new_linexp = LinExp::one() * pt.coef,
+                }
+                if new_linexp.is_zero() {
+                    continue;
+                }
+                let mut new_mon = Mon::from((m.vars.clone(), &self.r));
+                new_mon.coef = new_linexp;
+                res_mons.push(new_mon);
+            }
+        }
+        // こうやって作ると, 新しいパラメーターでRingが拡大されてしまうけど...
+        Temp::from((res_mons, &self.r))
     }
 }
 

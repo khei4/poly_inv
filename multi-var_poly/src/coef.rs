@@ -37,7 +37,7 @@ impl std::fmt::Debug for ParTerm {
 impl Eq for ParTerm {}
 
 impl ParTerm {
-    fn zero() -> Self {
+    pub fn zero() -> Self {
         ParTerm {
             par: None,
             coef: C::zero(),

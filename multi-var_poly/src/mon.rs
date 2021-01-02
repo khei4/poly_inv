@@ -164,6 +164,17 @@ impl From<(Par, HashMap<Var, usize>, &Rc<RefCell<Ring>>)> for Mon<LinExp> {
     }
 }
 
+impl<T: Coef> From<(HashMap<Var, usize>, &Rc<RefCell<Ring>>)> for Mon<T> {
+    fn from(mr: (HashMap<Var, usize>, &Rc<RefCell<Ring>>)) -> Self {
+        let (m, r) = mr;
+        Mon {
+            vars: m,
+            coef: T::one(),
+            r: r.clone(),
+        }
+    }
+}
+
 impl From<(Par, Vec<(Var, usize)>, &Rc<RefCell<Ring>>)> for Mon<LinExp> {
     fn from(pmr: (Par, Vec<(Var, usize)>, &Rc<RefCell<Ring>>)) -> Self {
         let (p, m, r) = pmr;
