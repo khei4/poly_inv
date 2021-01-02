@@ -228,6 +228,7 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
                     // 係数一致
                     let t = t1.clone() + -t2.clone();
                     // ゼロにならない
+                    println!("{:?}", t);
                     if t.mons
                         .last()
                         .expect("mons length 0 at eqs")
@@ -268,11 +269,11 @@ impl LinearEquations {
                 match pt.par {
                     Some(p) => {
                         mat[i][p.id] = pt.coef;
-                        b[i] = rows[i].1
                     }
                     None => panic!("constant is LHS!!"),
                 }
             }
+            b[i] = rows[i].1
         }
         // current echelon
         let mut cur = 0;
