@@ -258,7 +258,7 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 }
 
 impl LinearEquations {
-    pub fn solve(&self) -> Vec<(Par, LinExp)> {
+    pub fn solve(&self) -> Option<Vec<(Par, LinExp)>> {
         // 行列を作る. 縦のインデックスは, setのcollectによせる
         let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); self.parsize]; self.parsize];
         let mut b: Vec<C> = vec![C::zero(); self.parsize];
@@ -302,13 +302,53 @@ impl LinearEquations {
         }
 
         // Debug
-        // for i in 0..self.parsize {
-        //     for j in 0..self.parsize {
-        //         print!("{} ", mat[i][j]);
-        //     }
-        //     println!("={}", b[i]);
-        // }
-        vec![]
+        for i in 0..self.parsize {
+            for j in 0..self.parsize {
+                print!("{} ", mat[i][j]);
+            }
+            println!("={}", b[i]);
+        }
+        // self.parsize <= Par.id はfresh parameter(不定の解)
+        // Par.idが大きい方から新しいパラメーターを振る
+        // Par::new(i)の解は
+        // NOTE: 独立していて, なんの関係ももたないのは0?
+        let mut res: Vec<(Par, LinExp)> = (0..self.parsize)
+            .rev()
+            .map(|i| {
+                (
+                    Par::new(self.parsize - i - 1),
+                    LinExp::from(Par::new(self.parsize + i)),
+                )
+            })
+            .collect();
+        // bacword
+        for k in (0..self.parsize).rev() {
+            // tarは, 求まる変数
+            let mut c = mat[k][k];
+            let mut tar = k;
+            for i in k..self.parsize {
+                if !mat[k][i].is_zero() {
+                    c = mat[k][i];
+                    tar = i;
+                    break;
+                }
+            }
+            // 解が存在しない場合,その変数不定の場合
+            if c == C::zero() {
+                if !b[k].is_zero() {
+                    return None;
+                }
+                continue;
+            } else {
+                // 解ける時
+                let mut a = LinExp::one() * (b[k] / c);
+                for i in tar + 1..self.parsize {
+                    a += -res[i].1.clone() * (mat[k][i] / c);
+                }
+                res[tar].1 = a;
+            }
+        }
+        Some(res)
     }
 }
 
@@ -340,5 +380,12 @@ fn zero_and_mostgen() {
 
     let leq = LinearEquations::from((c, &r));
     println!("{}", leq);
-    leq.solve();
+    match leq.solve() {
+        Some(sol) => {
+            for s in sol {
+                println!("{:?} = {:?}", s.0, s.1);
+            }
+        }
+        None => println!("Solution dosn't exist"),
+    }
 }

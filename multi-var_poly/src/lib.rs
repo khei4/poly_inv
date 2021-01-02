@@ -210,10 +210,19 @@ mod tests {
         let c = Expr::Seq {
             exprs: vec![c_init, w],
         };
-
-        let (i, c) = gen_con_less_precise(&c, PIdeal::most_gen(2, &r), Cs::new());
+        let (i, c) = gen_con(&c, PIdeal::most_gen(2, &r), Cs::new());
         let c = c.add(Constraint(i, PIdeal::zero(&r)));
         let le = LinearEquations::from((c, &r));
         println!("{}", le);
+        match le.solve() {
+            Some(sol) => {
+                let test: std::collections::HashMap<Par, LinExp> =
+                    sol.clone().into_iter().collect();
+                for s in sol {
+                    println!("{:?} = {:?}", s.0, s.1);
+                }
+            }
+            None => println!("Solution dosn't exist"),
+        }
     }
 }
