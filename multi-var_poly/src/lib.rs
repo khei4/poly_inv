@@ -135,12 +135,17 @@ mod tests {
     fn mannadiv() {
         // Init Ring
         // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
+        let r = Ring::new(vec![]);
+        r.borrow_mut().vextend(String::from("x1"));
+        r.borrow_mut().vextend(String::from("x2"));
+        r.borrow_mut().vextend(String::from("y1"));
+        r.borrow_mut().vextend(String::from("y2"));
+        r.borrow_mut().vextend(String::from("y3"));
         let x1 = Var::new(0);
         let x2 = Var::new(1);
         let y1 = Var::new(2);
         let y2 = Var::new(3);
         let y3 = Var::new(4);
-        let r = Ring::new(vec![x1, x2, y1, y2, y3]);
 
         /*
             Initial Assignment
@@ -211,6 +216,7 @@ mod tests {
             exprs: vec![c_init, w],
         };
         let g = Temp::most_gen(2, &r);
+        // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
         let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
         let c = c.add(Constraint(i, PIdeal::zero(&r)));
         let le = LinearEquations::from((c, &r));

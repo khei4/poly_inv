@@ -311,7 +311,6 @@ impl LinearEquations {
         // self.parsize <= Par.id はfresh parameter(不定の解)
         // Par.idが大きい方から新しいパラメーターを振る
         // Par::new(i)の解は
-        // NOTE: 独立していて, なんの関係ももたないのは0?
         let mut res: Vec<(Par, LinExp)> = (0..self.parsize)
             .rev()
             .map(|i| {
@@ -333,6 +332,12 @@ impl LinearEquations {
                     break;
                 }
             }
+            // kとtarの列をSwapする(これはその必要があるのか？)
+            b.swap(k, tar);
+            res.swap(k, tar);
+            for i in 0..self.parsize {
+                mat[i].swap(k, tar);
+            }
             // 解が存在しない場合,その変数不定の場合
             if c == C::zero() {
                 if !b[k].is_zero() {
@@ -342,16 +347,16 @@ impl LinearEquations {
             } else {
                 // 解ける時
                 let mut a = LinExp::one() * (b[k] / c);
-                for i in tar + 1..self.parsize {
+                for i in k + 1..self.parsize {
                     a += -res[i].1.clone() * (mat[k][i] / c);
                 }
-                res[tar].1 = a;
+                res[k].1 = a;
             }
         }
+        res.sort_by(|e1, e2| e1.0.cmp(&e2.0));
         Some(res)
     }
 }
-
 #[test]
 fn zero_and_mostgen() {
     // 0 -> x, 1 -> y, 2 -> z
