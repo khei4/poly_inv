@@ -130,8 +130,16 @@ pub fn gen_con(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, Cs) {
             let (i1, c1) = gen_con(the, ideal.clone(), c.clone());
             let (i2, c2) = gen_con(els, ideal, c);
             match guard {
-                Pred { p, eq } if *eq => (i1.rem_par(p).union(i2.mul(p)), c1.union(c2)),
-                Pred { p, .. } => (i2.rem_par(p).union(i1.mul(p)), c1.union(c2)),
+                Pred { p, eq } if *eq => {
+                    let i1remp = i1.rem_par(p);
+                    let i2p = i2.mul(p);
+                    (i1remp.union(i2p), c1.union(c2))
+                }
+                Pred { p, .. } => {
+                    let i2remp = i2.rem_par(p);
+                    let i1p = i1.mul(p);
+                    (i2remp.union(i1p), c1.union(c2))
+                }
             }
         }
         Expr::While { c: body, .. } => {
@@ -166,8 +174,14 @@ pub fn gen_con_less_precise(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, 
             let (i1, c1) = gen_con(the, ideal.clone(), c.clone());
             let (i2, c2) = gen_con(els, ideal, c);
             match guard {
-                Pred { p, eq } if *eq => (i1.rem_par(p).union(i2), c1.union(c2)),
-                Pred { p, .. } => (i2.rem_par(p).union(i1), c1.union(c2)),
+                Pred { p, eq } if *eq => {
+                    let i1remp = i1.rem_par(p);
+                    (i1remp.union(i2), c1.union(c2))
+                }
+                Pred { p, .. } => {
+                    let i2remp = i2.rem_par(p);
+                    (i2remp.union(i1), c1.union(c2))
+                }
             }
         }
         Expr::While { c: body, .. } => {
@@ -228,7 +242,6 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
                     // 係数一致
                     let t = t1.clone() + -t2.clone();
                     // ゼロにならない
-                    println!("{:?}", t);
                     if t.mons
                         .last()
                         .expect("mons length 0 at eqs")
@@ -307,12 +320,12 @@ impl LinearEquations {
         }
 
         // Debug
-        for i in 0..self.parsize {
-            for j in 0..self.parsize {
-                print!("{:^3} ", mat[i][j]);
-            }
-            println!("={}", b[i]);
-        }
+        // for i in 0..self.parsize {
+        //     for j in 0..self.parsize {
+        //         print!("{:^3} ", mat[i][j]);
+        //     }
+        //     println!("={}", b[i]);
+        // }
         let mut res: Vec<(Par, LinExp)> = (0..self.parsize)
             .rev()
             .map(|i| {
