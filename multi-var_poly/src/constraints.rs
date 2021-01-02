@@ -206,7 +206,7 @@ impl std::fmt::Display for LinearEquations {
                 } else {
                     term = format!("{}{:?}", outvec[i], Par::new(i));
                 }
-                res = format!("{}{:^7}", res, term);
+                res = format!("{}{:^5}", res, term);
             }
             res = format!("{}=  {}  \n", res, c);
         }
@@ -274,43 +274,44 @@ impl LinearEquations {
                 }
             }
         }
-
+        // current echelon
+        let mut cur = 0;
         for k in 0..self.parsize {
             // pivoting
-            let mut max_i = k;
-            let mut max_v = mat[k][k];
-            for l in k..self.parsize {
+            let mut max_i = cur;
+            let mut max_v = mat[cur][k];
+            for l in cur..self.parsize {
                 if mat[l][k] != C::zero() && (max_v < mat[l][k] || max_v == C::zero()) {
                     max_i = l;
                     max_v = mat[l][k];
                 }
             }
-            mat.swap(k, max_i);
+            mat.swap(cur, max_i);
+            b.swap(cur, max_i);
 
-            if mat[k][k].is_zero() {
+            if mat[cur][k].is_zero() {
                 continue;
-            }
-            for i in k + 1..self.parsize {
-                let m = mat[i][k] / mat[k][k];
-                for j in k..self.parsize {
-                    let t = m * mat[k][j];
-                    mat[i][j] -= t;
+            } else {
+                for i in cur + 1..self.parsize {
+                    let m = mat[i][k] / mat[cur][k];
+                    for j in k..self.parsize {
+                        let t = m * mat[cur][j];
+                        mat[i][j] -= t;
+                    }
+                    let t = m * b[cur];
+                    b[i] -= t;
                 }
-                let t = m * b[k];
-                b[i] -= t;
+                cur += 1;
             }
         }
 
         // Debug
         for i in 0..self.parsize {
             for j in 0..self.parsize {
-                print!("{} ", mat[i][j]);
+                print!("{:^3} ", mat[i][j]);
             }
             println!("={}", b[i]);
         }
-        // self.parsize <= Par.id はfresh parameter(不定の解)
-        // Par.idが大きい方から新しいパラメーターを振る
-        // Par::new(i)の解は
         let mut res: Vec<(Par, LinExp)> = (0..self.parsize)
             .rev()
             .map(|i| {
@@ -320,6 +321,7 @@ impl LinearEquations {
                 )
             })
             .collect();
+
         // bacword
         for k in (0..self.parsize).rev() {
             // tarは, 求まる変数
@@ -332,13 +334,6 @@ impl LinearEquations {
                     break;
                 }
             }
-            // kとtarの列をSwapする(これはその必要があるのか？)
-            b.swap(k, tar);
-            res.swap(k, tar);
-            for i in 0..self.parsize {
-                mat[i].swap(k, tar);
-            }
-            // 解が存在しない場合,その変数不定の場合
             if c == C::zero() {
                 if !b[k].is_zero() {
                     return None;
@@ -346,11 +341,11 @@ impl LinearEquations {
                 continue;
             } else {
                 // 解ける時
-                let mut a = LinExp::one() * (b[k] / c);
-                for i in k + 1..self.parsize {
+                let mut a = LinExp::one() * (b[tar] / c);
+                for i in tar + 1..self.parsize {
                     a += -res[i].1.clone() * (mat[k][i] / c);
                 }
-                res[k].1 = a;
+                res[tar].1 = a;
             }
         }
         res.sort_by(|e1, e2| e1.0.cmp(&e2.0));
