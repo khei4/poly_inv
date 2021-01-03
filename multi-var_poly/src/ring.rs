@@ -67,8 +67,15 @@ impl Ring {
         self.pars.extend(new_pars);
     }
     pub fn vextend(&mut self, s: String) -> Var {
-        let v = Var::new(self.vars.len());
-        self.vars.insert(v, s);
-        v
+        // ここで一意性が保てていなかった...
+        let revmap: HashMap<String, Var> =
+            self.vars.clone().into_iter().map(|(v, s)| (s, v)).collect();
+        if revmap.contains_key(&s) {
+            revmap[&s]
+        } else {
+            let v = Var::new(self.vars.len());
+            self.vars.insert(v, s);
+            v
+        }
     }
 }
