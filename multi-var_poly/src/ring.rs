@@ -38,6 +38,7 @@ use std::rc::Rc;
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Ring {
     pub vars: HashMap<Var, String>,
+    revvars: HashMap<String, Var>,
     pub pars: HashSet<Par>,
 }
 impl Hash for Ring {
@@ -60,6 +61,7 @@ impl Ring {
     pub fn new() -> Rc<RefCell<Ring>> {
         Rc::new(RefCell::new(Ring {
             vars: HashMap::new(),
+            revvars: HashMap::new(),
             pars: HashSet::new(),
         }))
     }
@@ -67,14 +69,12 @@ impl Ring {
         self.pars.extend(new_pars);
     }
     pub fn vextend(&mut self, s: String) -> Var {
-        // ここで一意性が保てていなかった...
-        let revmap: HashMap<String, Var> =
-            self.vars.clone().into_iter().map(|(v, s)| (s, v)).collect();
-        if revmap.contains_key(&s) {
-            revmap[&s]
+        if self.revvars.contains_key(&s) {
+            self.revvars[&s]
         } else {
             let v = Var::new(self.vars.len());
-            self.vars.insert(v, s);
+            self.vars.insert(v, s.clone());
+            self.revvars.insert(s, v);
             v
         }
     }
