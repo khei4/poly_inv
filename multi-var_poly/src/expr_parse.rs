@@ -33,7 +33,7 @@ pub enum E {
     },
     Skip,
     Seq {
-        exprs: Vec<E>,
+        es: Vec<E>,
     },
     If {
         guard: Pre,
@@ -130,30 +130,126 @@ fn pred_parser() {
     assert_eq!(Ok(("", expected)), pred().parse("0 != 7"));
 }
 
-// fn if_stmt<'a>() -> impl Parser<'a, E> {
-//     right(
-//         pair(
-//             whitespace_wrap(match_literal("if")),
-//             whitespace_wrap(match_literal("(")),
-//         ),
-//         left(pred(), match_literal(")")),
-//     )
-//     .and_then(|pred| {
-//         right(
-//             whitespace_wrap(match_literal("{")),
-//             left(program(), whitespace_wrap(match_literal("}"))),
-//         )
-//         .and_then(|the| {
-//             one_or_zero(
-//                 right(whitespace_wrap(match_literal("else")),
-//                     right(
-//                         whitespace_wrap(match_literal("{")),
-//                         left(program(), whitespace_wrap(match_literal("}"))),
-//                     ),
-//             ))
-//             .map(move |els| E::If { guard: pred, the, els })
-//     })
-// }
+fn if_cnd<'a>() -> impl Parser<'a, Pre> {
+    right(
+        pair(
+            whitespace_wrap(match_literal("if")),
+            whitespace_wrap(match_literal("(")),
+        ),
+        left(pred(), match_literal(")")),
+    )
+}
+
+fn nested_program<'a>() -> impl Parser<'a, E> {
+    right(
+        whitespace_wrap(match_literal("{")),
+        left(program(), whitespace_wrap(match_literal("}"))),
+    )
+}
+
+fn if_stmt<'a>() -> impl Parser<'a, E> {
+    if_cnd().and_then(|pred| {
+        pair(
+            nested_program(),
+            one_or_zero(right(
+                whitespace_wrap(match_literal("else")),
+                nested_program(),
+            )),
+        )
+        .map(move |(the, els)| match els {
+            Some(e) => E::If {
+                guard: pred.clone(),
+                the: Box::new(the),
+                els: Some(Box::new(e)),
+            },
+            None => E::If {
+                guard: pred.clone(),
+                the: Box::new(the),
+                els: None,
+            },
+        })
+    })
+}
+
+#[test]
+fn if_parser() {
+    let expected = E::If {
+        guard: Pre {
+            p: P::Sub {
+                exp1: Box::new(P::Num(0)),
+                exp2: Box::new(P::Num(0)),
+            },
+            eq: true,
+        },
+        the: Box::new(E::Ass {
+            v: V("x1".to_string()),
+            p: P::Num(0),
+        }),
+        els: None,
+    };
+    assert_eq!(
+        Ok(("", expected)),
+        if_stmt().parse("if (0 == 0) { x1 = 0; }")
+    );
+    let expected = E::If {
+        guard: Pre {
+            p: P::Sub {
+                exp1: Box::new(P::Var("x".to_string())),
+                exp2: Box::new(P::Num(0)),
+            },
+            eq: false,
+        },
+        the: Box::new(E::Seq {
+            es: vec![
+                E::Ass {
+                    v: V("x1".to_string()),
+                    p: P::Num(0),
+                },
+                E::Ass {
+                    v: V("y".to_string()),
+                    p: P::Num(1),
+                },
+            ],
+        }),
+        els: Some(Box::new(E::Ass {
+            v: V("x1".to_string()),
+            p: P::Var("y".to_string()),
+        })),
+    };
+    assert_eq!(
+        Ok(("", expected)),
+        if_stmt().parse(
+            r#"
+        if (x != 0) 
+            { x1 = 0; y = 1; } 
+        else 
+            {  x1 = y;      }
+        "#
+        )
+    );
+}
+
+fn skip<'a>() -> impl Parser<'a, E> {
+    match_literal("skip").map(|()| E::Skip)
+}
+fn expr<'a>() -> impl Parser<'a, E> {
+    either(assign(), skip())
+}
+
+fn stmt<'a>() -> impl Parser<'a, E> {
+    left(expr(), match_literal(";"))
+}
+fn program<'a>() -> impl Parser<'a, E> {
+    zero_or_more(stmt()).map(move |es| {
+        if es.len() == 0 {
+            E::Skip
+        } else if es.len() == 1 {
+            es[0].clone()
+        } else {
+            E::Seq { es }
+        }
+    })
+}
 
 // fn term<'a>() -> impl Parser<'a, P> {
 //     factor().and_then(|val| {
