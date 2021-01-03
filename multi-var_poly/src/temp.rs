@@ -214,9 +214,8 @@ impl Temp {
         // 各単項式の
         let mut res_mons: Vec<Mon<LinExp>> = vec![];
         for Reverse(m) in &self.mons {
-            // 各パラメーターに
             for pt in &m.coef.terms {
-                let mut new_linexp;
+                let new_linexp;
                 match pt.par {
                     Some(p) => new_linexp = sol_map[&p].clone() * pt.coef,
                     None => new_linexp = LinExp::one() * pt.coef,
