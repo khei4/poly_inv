@@ -3,12 +3,19 @@ use super::p_comb::*;
 use super::poly::*;
 use super::ring::*;
 
+// poly := term ('+' term | '-' term)*
+// term := factor ('*' factor)*
+// factor := value ('^' number)*
+// value :=
+// number
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum P {
     Add { exp1: Box<P>, exp2: Box<P> },
     Sub { exp1: Box<P>, exp2: Box<P> },
     Mul { exp1: Box<P>, exp2: Box<P> },
     Pow { exp1: Box<P>, exp2: Box<P> },
+    Neg(Box<P>),
     Var(String),
     Num(i64),
 }
@@ -133,7 +140,7 @@ fn term_parser() {
 }
 
 fn factor<'a>() -> impl Parser<'a, P> {
-    value().and_then(|val| {
+    unary().and_then(|val| {
         zero_or_more(right(
             whitespace_wrap(match_literal("^")),
             unsigned_number(),
@@ -189,8 +196,19 @@ fn factor_parser() {
     };
     assert_eq!(Ok(("", expected_factor2)), factor().parse("x1 ^ 3 ^ 3 ^ 2"));
 }
-
-fn value<'a>() -> impl Parser<'a, P> {
+fn unary<'a>() -> impl Parser<'a, P> {
+    one_or_zero(whitespace_wrap(any_char.pred(|c| *c == '+' || *c == '-'))).and_then(|c| {
+        primary().map(move |p| match c {
+            Some(c) if c == '+' => p,
+            Some(c) if c == '-' => P::Neg(Box::new(p)),
+            None => p,
+            _ => {
+                unreachable!()
+            }
+        })
+    })
+}
+fn primary<'a>() -> impl Parser<'a, P> {
     either(unsigned_number(), variable())
 }
 
