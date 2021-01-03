@@ -39,7 +39,7 @@ impl Poly {
 
 #[test]
 fn test_zero() {
-    let r = Ring::new(vec![]);
+    let r = Ring::new();
     println!("{:?}", Poly::zero(&r));
 }
 
@@ -132,11 +132,10 @@ impl Poly {
 #[test]
 fn check_poly_pow() {
     // 0 -> x, 1 -> y, 2 -> z
-    let x = Var::new(0);
-    let y = Var::new(1);
-    let z = Var::new(2);
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
+    let r = Ring::new();
+    let x = r.borrow_mut().vextend("x".to_string());
+    let y = r.borrow_mut().vextend("y".to_string());
+    let z = r.borrow_mut().vextend("z".to_string());
 
     // Monomials, Polynomials
     let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
@@ -217,11 +216,10 @@ impl std::ops::MulAssign<Poly> for Poly {
 #[test]
 fn check_poly_addition() {
     // 0 -> x, 1 -> y, 2 -> z
-    let x = Var::new(0);
-    let y = Var::new(1);
-    let z = Var::new(2);
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
+    let r = Ring::new();
+    let x = r.borrow_mut().vextend("x".to_string());
+    let y = r.borrow_mut().vextend("y".to_string());
+    let z = r.borrow_mut().vextend("z".to_string());
 
     let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
     let y2: Mon<C> = Mon::from((vec![(y, 2)], &r));

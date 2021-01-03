@@ -28,18 +28,12 @@ mod tests {
     // #[test]
     // fn mannadiv_simple() {
     //     // Init Ring
-    // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
-    //     let r = Ring::new(vec![]);
-    // r.borrow_mut().vextend(String::from("x1"));
-    // r.borrow_mut().vextend(String::from("x2"));
-    // r.borrow_mut().vextend(String::from("y1"));
-    // r.borrow_mut().vextend(String::from("y2"));
-    // r.borrow_mut().vextend(String::from("y3"));
-    // let x1 = Var::new(0);
-    // let x2 = Var::new(1);
-    // let y1 = Var::new(2);
-    // let y2 = Var::new(3);
-    // let y3 = Var::new(4);
+    // let r = Ring::new();
+    // let x1 = r.borrow_mut().vextend(String::from("x1"));
+    // let x2 = r.borrow_mut().vextend(String::from("x2"));
+    // let y1 = r.borrow_mut().vextend(String::from("y1"));
+    // let y2 = r.borrow_mut().vextend(String::from("y2"));
+    // let y3 = r.borrow_mut().vextend(String::from("y3"));
     //     /*
     //         Initial Assignment
     //     */
@@ -110,17 +104,12 @@ mod tests {
 
     // #[test]
     // fn assinment_test() {
-    //     let r = Ring::new(vec![]);
-    // r.borrow_mut().vextend(String::from("x1"));
-    // r.borrow_mut().vextend(String::from("x2"));
-    // r.borrow_mut().vextend(String::from("y1"));
-    // r.borrow_mut().vextend(String::from("y2"));
-    // r.borrow_mut().vextend(String::from("y3"));
-    // let x1 = Var::new(0);
-    // let x2 = Var::new(1);
-    // let y1 = Var::new(2);
-    // let y2 = Var::new(3);
-    // let y3 = Var::new(4);
+    // let r = Ring::new();
+    // let x1 = r.borrow_mut().vextend(String::from("x1"));
+    // let x2 = r.borrow_mut().vextend(String::from("x2"));
+    // let y1 = r.borrow_mut().vextend(String::from("y1"));
+    // let y2 = r.borrow_mut().vextend(String::from("y2"));
+    // let y3 = r.borrow_mut().vextend(String::from("y3"));
 
     //     let pc13y3 = Poly::from((
     //         vec![Mon::from((vec![(y3, 1)], &r)), Mon::one(&r) * -C::one()],
@@ -148,18 +137,12 @@ mod tests {
 #[test]
 fn mannadiv() {
     // Init Ring
-    // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
-    let r = Ring::new(vec![]);
-    r.borrow_mut().vextend(String::from("x1"));
-    r.borrow_mut().vextend(String::from("x2"));
-    r.borrow_mut().vextend(String::from("y1"));
-    r.borrow_mut().vextend(String::from("y2"));
-    r.borrow_mut().vextend(String::from("y3"));
-    let x1 = Var::new(0);
-    let x2 = Var::new(1);
-    let y1 = Var::new(2);
-    let y2 = Var::new(3);
-    let y3 = Var::new(4);
+    let r = Ring::new();
+    let x1 = r.borrow_mut().vextend(String::from("x1"));
+    let x2 = r.borrow_mut().vextend(String::from("x2"));
+    let y1 = r.borrow_mut().vextend(String::from("y1"));
+    let y2 = r.borrow_mut().vextend(String::from("y2"));
+    let y3 = r.borrow_mut().vextend(String::from("y3"));
 
     /*
         Initial Assignment

@@ -287,11 +287,10 @@ impl<T: Coef> std::cmp::Ord for Mon<T> {
 fn mon_ord_test() {
     // Init Ring
     // 0 -> x, 1 -> y, 2 -> z
-    let x = Var::new(0);
-    let y = Var::new(1);
-    let z = Var::new(2);
-    let vars = vec![x, y, z];
-    let r = Ring::new(vars);
+    let r = Ring::new();
+    let x = r.borrow_mut().vextend("x".to_string());
+    let y = r.borrow_mut().vextend("y".to_string());
+    let z = r.borrow_mut().vextend("z".to_string());
 
     let x2: Mon<C> = Mon::from((vec![(x, 2)], &r));
     let xy: Mon<C> = Mon::from((vec![(x, 1), (y, 1)], &r));

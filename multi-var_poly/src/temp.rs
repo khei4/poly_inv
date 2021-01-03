@@ -68,7 +68,7 @@ impl Temp {
 
 #[test]
 fn zero_is_identity_of_add() {
-    let r = Ring::new(vec![]);
+    let r = Ring::new();
     assert!(Temp::one(&r) + Temp::zero(&r) == Temp::one(&r));
     assert!(Temp::zero(&r) + Temp::one(&r) == Temp::one(&r));
     assert!(Temp::zero(&r) + Temp::zero(&r) == Temp::zero(&r));
@@ -275,7 +275,7 @@ impl std::ops::Mul<Poly> for Temp {
 
 #[test]
 fn one_id_of_mul_zero_is_zero() {
-    let r = Ring::new(vec![]);
+    let r = Ring::new();
     assert!(Temp::one(&r) * Poly::zero(&r) == Temp::zero(&r));
     println!("T 1 * P 0 = T 0");
     assert!(Temp::zero(&r) * Poly::one(&r) == Temp::zero(&r));
@@ -309,10 +309,10 @@ mod tests {
     fn check_temp_add_poly_mul() {
         // Init Ring
         // 0 -> x, 1 -> y, 2 -> z
-        let x = Var::new(0);
-        let y = Var::new(1);
-        let z = Var::new(2);
-        let r = Ring::new(vec![x, y, z]);
+        let r = Ring::new();
+        let x = r.borrow_mut().vextend("x".to_string());
+        let y = r.borrow_mut().vextend("y".to_string());
+        let z = r.borrow_mut().vextend("z".to_string());
         // parameters
         let pars: Vec<Par> = (0..4).map(|i| Par::new(i)).collect();
         // Init Template
@@ -359,10 +359,10 @@ mod tests {
     #[test]
     fn check_subs_mostgen() {
         // 0 -> x, 1 -> y, 2 -> z
-        let x = Var::new(0);
-        let y = Var::new(1);
-        let z = Var::new(2);
-        let r = Ring::new(vec![x, y, z]);
+        let r = Ring::new();
+        let x = r.borrow_mut().vextend("x".to_string());
+        let y = r.borrow_mut().vextend("y".to_string());
+        let z = r.borrow_mut().vextend("z".to_string());
 
         // Init Template by
         /*
@@ -396,12 +396,12 @@ mod tests {
         */
         // Init Ring
         // 0 -> x1, 1 -> x2, 2 -> y1, 3 -> y2, 4 -> y3
-        let x1 = Var::new(0);
-        let x2 = Var::new(1);
-        let y1 = Var::new(2);
-        let y2 = Var::new(3);
-        let y3 = Var::new(4);
-        let r = Ring::new(vec![x1, x2, y1, y2, y3]);
+        let r = Ring::new();
+        let x1 = r.borrow_mut().vextend("x1".to_string());
+        let x2 = r.borrow_mut().vextend("x2".to_string());
+        let y1 = r.borrow_mut().vextend("y1".to_string());
+        let y2 = r.borrow_mut().vextend("y2".to_string());
+        let y3 = r.borrow_mut().vextend("y3".to_string());
         // Init Invariant (Template)
         // y1*x2 + y2 + y3 - x1 = 0
 

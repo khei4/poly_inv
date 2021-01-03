@@ -1,3 +1,4 @@
+use super::constraints::*;
 use super::p_comb::*;
 use super::poly::*;
 use super::poly_parse::*;
@@ -394,4 +395,7 @@ fn p_program_parser() {
             }"#
         )
     );
+    // 変数一覧を取らなきゃいけなかった.
+    let r = Ring::new();
+    // gen_con_alt(&expected, PIdeal::most_gen(d: usize, r: &Rc<RefCell<Ring>>), mut c: Cs, r: &Rc<RefCell<Ring>>)
 }

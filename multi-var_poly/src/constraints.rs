@@ -1,7 +1,9 @@
 use super::coef::*;
 use super::expr::*;
+use super::expr_parse::*;
 use super::mon::*;
 use super::poly::*;
+use super::poly_parse::*;
 use super::ring::*;
 use super::temp::*;
 use std::cell::RefCell;
@@ -192,6 +194,73 @@ pub fn gen_con_less_precise(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, 
     }
 }
 
+// Generating Constraints from parser result
+pub fn gen_con_alt(e: &E, mut ideal: PIdeal, mut c: Cs, r: &Rc<RefCell<Ring>>) -> (PIdeal, Cs) {
+    match e {
+        E::Ass { v, p } => {
+            let v = r.borrow_mut().vextend(v.0.clone());
+            let mut new_gens = HashSet::new();
+            let p = create_poly(p, r);
+            for tp in &mut ideal.gens.iter() {
+                new_gens.insert(tp.clone().subs(v, p.clone()));
+            }
+            ideal.gens = new_gens;
+            (ideal, c)
+        }
+        E::Skip => (ideal, c),
+        E::Seq { es } => {
+            for i in (0..es.len()).rev() {
+                let next_ic = gen_con_alt(&es[i], ideal, c, r);
+                ideal = next_ic.0;
+                c = next_ic.1;
+            }
+            (ideal, c)
+        }
+        E::If { guard, the, els } => match els {
+            Some(els_exp) => {
+                let (i1, c1) = gen_con_alt(the, ideal.clone(), c.clone(), r);
+                let (i2, c2) = gen_con_alt(els_exp, ideal, c, r);
+                match guard {
+                    Pre { p, eq } if *eq => {
+                        let p = create_poly(p, r);
+                        let i1remp = i1.rem_par(&p);
+                        let i2p = i2.mul(&p);
+                        (i1remp.union(i2p), c1.union(c2))
+                    }
+                    Pre { p, .. } => {
+                        let p = create_poly(p, r);
+                        let i2remp = i2.rem_par(&p);
+                        let i1p = i1.mul(&p);
+                        (i2remp.union(i1p), c1.union(c2))
+                    }
+                }
+            }
+            None => {
+                let (i1, c1) = gen_con_alt(the, ideal.clone(), c.clone(), r);
+                match guard {
+                    Pre { p, eq } if *eq => {
+                        let p = create_poly(p, r);
+                        let i1remp = i1.rem_par(&p);
+                        let i2p = ideal.mul(&p);
+                        (i1remp.union(i2p), c1.union(c))
+                    }
+                    Pre { p, .. } => {
+                        let p = create_poly(p, r);
+                        let i2remp = ideal.rem_par(&p);
+                        let i1p = i1.mul(&p);
+                        (i2remp.union(i1p), c1.union(c))
+                    }
+                }
+            }
+        },
+        E::While { body, .. } => {
+            let (i1, c1) = gen_con_alt(body, ideal.clone(), c.clone(), r);
+            c = c.add(Constraint(ideal.clone(), i1));
+            (ideal, c.union(c1))
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct LinearEquations {
     parsize: usize,
@@ -369,7 +438,7 @@ impl LinearEquations {
 #[test]
 fn zero_and_mostgen() {
     // 0 -> x, 1 -> y, 2 -> z
-    let r = Ring::new(vec![]);
+    let r = Ring::new();
     r.borrow_mut().vextend(String::from("x0"));
     let x0 = Var::new(0);
     r.borrow_mut().vextend(String::from("x1"));

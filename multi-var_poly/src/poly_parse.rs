@@ -278,7 +278,7 @@ fn pow_calc(p: &P) -> usize {
     }
 }
 
-fn create_poly(p: &P, r: &Rc<RefCell<Ring>>) -> Poly {
+pub fn create_poly(p: &P, r: &Rc<RefCell<Ring>>) -> Poly {
     match p {
         P::Add { exp1, exp2 } => create_poly(exp1, r) + create_poly(exp2, r),
         P::Mul { exp1, exp2 } => create_poly(exp1, r) * create_poly(exp2, r),
@@ -336,7 +336,7 @@ fn poly_construct() {
         Ok(("", powed_poly)),
         poly().parse("(       3 * x4 * y2 +  x1 ^ 3 * y1 ^ 2 * x1 ^ 4 ) ^ 3")
     );
-    let r = Ring::new(vec![]);
+    let r = Ring::new();
     match poly().parse("(       3 * x4 * y2 +  x1 ^ 3 * y1 ^ 2 * x1 ^ 4 ) ") {
         Ok((_s, p)) => println!("{:?}", create_poly(&p, &r)),
         Err(_) => unreachable!(),

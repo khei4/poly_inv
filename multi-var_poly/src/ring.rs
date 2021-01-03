@@ -57,9 +57,9 @@ impl Hash for Ring {
 }
 
 impl Ring {
-    pub fn new(a: Vec<Var>) -> Rc<RefCell<Ring>> {
+    pub fn new() -> Rc<RefCell<Ring>> {
         Rc::new(RefCell::new(Ring {
-            vars: a.iter().map(|v| (*v, v.id.to_string())).collect(),
+            vars: HashMap::new(),
             pars: HashSet::new(),
         }))
     }
