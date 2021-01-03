@@ -1,7 +1,13 @@
 use super::coef::*;
+use super::constraints::*;
+use super::expr_parse::*;
 use super::mon::*;
+use super::p_comb::*;
 use super::poly::*;
+use super::poly_parse::*;
 use super::ring::*;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pred {
@@ -110,4 +116,38 @@ fn mannadiv_simple() {
     let c = Expr::Seq {
         exprs: vec![c_init, c_if],
     };
+}
+// 環に変数を追加しながら, 都合の良い形に変換する.
+pub fn convert_from_parseresult(e: &E, r: &Rc<RefCell<Ring>>) -> Expr {
+    match e {
+        E::Ass { v, p } => {
+            let v = r.borrow_mut().vextend(v.0.clone());
+            let p = create_poly(p, r);
+            Expr::Ass { lv: v, rv: p }
+        }
+        E::Skip => Expr::Skip,
+        E::Seq { es } => {
+            let mut exprs = vec![];
+            for i in 0..es.len() {
+                exprs.push(convert_from_parseresult(&es[i], r));
+            }
+            Expr::Seq { exprs }
+        }
+        E::If { guard, the, els } => {
+            let e;
+            match els {
+                Some(els_exp) => e = convert_from_parseresult(els_exp, r),
+                None => e = Expr::Skip,
+            }
+            Expr::If {
+                guard: Pred::new(create_poly(&guard.p, r), guard.eq),
+                the: Box::new(convert_from_parseresult(the, r)),
+                els: Box::new(e),
+            }
+        }
+        E::While { guard, body } => Expr::While {
+            guard: Pred::new(create_poly(&guard.p, r), guard.eq),
+            c: Box::new(convert_from_parseresult(body, r)),
+        },
+    }
 }
