@@ -197,13 +197,12 @@ fn factor_parser() {
     assert_eq!(Ok(("", expected_factor2)), factor().parse("x1 ^ 3 ^ 3 ^ 2"));
 }
 fn unary<'a>() -> impl Parser<'a, P> {
-    one_or_zero(whitespace_wrap(any_char.pred(|c| *c == '+' || *c == '-'))).and_then(|c| {
-        primary().map(move |p| match c {
-            Some(c) if c == '+' => p,
-            Some(c) if c == '-' => P::Neg(Box::new(p)),
-            None => p,
-            _ => {
-                unreachable!()
+    zero_or_more(whitespace_wrap(any_char.pred(|c| *c == '+' || *c == '-'))).and_then(|vc| {
+        primary().map(move |p| {
+            if vc.iter().filter(|&c| *c == '-').count() % 2 != 0 {
+                P::Neg(Box::new(p))
+            } else {
+                p
             }
         })
     })
