@@ -58,6 +58,26 @@ impl From<(Vec<Mon<C>>, &Rc<RefCell<Ring>>)> for Poly {
     }
 }
 
+impl From<(Var, &Rc<RefCell<Ring>>)> for Poly {
+    fn from(vr: (Var, &Rc<RefCell<Ring>>)) -> Self {
+        let (v, r) = vr;
+        Poly {
+            mons: vec![Reverse(Mon::from((v, r)))],
+            r: r.clone(),
+        }
+    }
+}
+
+impl From<(C, &Rc<RefCell<Ring>>)> for Poly {
+    fn from(cr: (C, &Rc<RefCell<Ring>>)) -> Self {
+        let (c, r) = cr;
+        Poly {
+            mons: vec![Reverse(Mon::one(r) * c)],
+            r: r.clone(),
+        }
+    }
+}
+
 // methods
 
 impl Poly {
@@ -124,6 +144,7 @@ fn check_poly_pow() {
     let yz: Mon<C> = Mon::from((vec![(y, 1), (z, 1)], &r));
     let p1 = Poly::from((vec![x2], &r));
     println!("{:?}", p1.pow(5));
+    println!("{:?}", (Poly::from((C::new(3, 1), &r)).pow(5)));
 }
 
 impl std::ops::Neg for Poly {
@@ -149,6 +170,24 @@ impl std::ops::Add<Poly> for Poly {
 impl std::ops::AddAssign<Poly> for Poly {
     fn add_assign(&mut self, rhs: Poly) {
         *self = self.clone() + rhs;
+    }
+}
+
+impl std::ops::Sub<Poly> for Poly {
+    type Output = Poly;
+
+    fn sub(mut self, mut rhs: Poly) -> Self::Output {
+        // TODO: 激オソなので, 改善しよう
+        rhs = -rhs;
+        self.mons.extend(rhs.mons);
+        self.sort_sumup();
+        self
+    }
+}
+
+impl std::ops::SubAssign<Poly> for Poly {
+    fn sub_assign(&mut self, rhs: Poly) {
+        *self = self.clone() - rhs;
     }
 }
 
