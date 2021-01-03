@@ -86,8 +86,16 @@ fn poly_parser() {
     };
 
     assert_eq!(
-        Ok(("", expected_poly)),
+        Ok(("", expected_poly.clone())),
         poly().parse("3 * x4 * y2 +  x1 ^ 3 * y1 ^ 2 * x1 ^ 4")
+    );
+    let powed_poly = P::Pow {
+        exp1: Box::new(expected_poly),
+        exp2: Box::new(P::Num(3)),
+    };
+    assert_eq!(
+        Ok(("", powed_poly)),
+        poly().parse("(       3 * x4 * y2 +  x1 ^ 3 * y1 ^ 2 * x1 ^ 4 ) ^ 3")
     );
 }
 
@@ -208,7 +216,16 @@ fn unary<'a>() -> impl Parser<'a, P> {
     })
 }
 fn primary<'a>() -> impl Parser<'a, P> {
-    either(unsigned_number(), variable())
+    either(
+        unsigned_number(),
+        either(
+            variable(),
+            right(
+                match_literal("("),
+                left(whitespace_wrap(poly()), match_literal(")")),
+            ),
+        ),
+    )
 }
 
 fn unsigned_number<'a>() -> impl Parser<'a, P> {
