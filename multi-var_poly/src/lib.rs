@@ -14,8 +14,10 @@ use coef::*;
 use constraints::*;
 #[allow(unused_imports)]
 use expr::*;
+use expr_parse::*;
 #[allow(unused_imports)]
 use mon::*;
+use p_comb::*;
 #[allow(unused_imports)]
 use poly::*;
 #[allow(unused_imports)]
@@ -145,21 +147,6 @@ fn mannadiv() {
     let y3 = r.borrow_mut().vextend(String::from("y3"));
 
     /*
-        Initial Assignment
-    */
-
-    let p1y1 = Poly::zero(&r);
-    let p2y2 = Poly::zero(&r);
-    let p3y3 = Poly::from((vec![Mon::from((vec![(x1, 1)], &r))], &r));
-    let c_init = Expr::Seq {
-        exprs: vec![
-            Expr::Ass { lv: y1, rv: p1y1 },
-            Expr::Ass { lv: y2, rv: p2y2 },
-            Expr::Ass { lv: y3, rv: p3y3 },
-        ],
-    };
-
-    /*
         Construct If
     */
     // then clause
@@ -205,13 +192,83 @@ fn mannadiv() {
         els: Box::new(c2),
     };
 
+    /*
+        Initial Assignment
+    */
+
+    let p1y1 = Poly::zero(&r);
+    let p2y2 = Poly::zero(&r);
+    let p3y3 = Poly::from((vec![Mon::from((vec![(x1, 1)], &r))], &r));
+    // Parserの都合で変える
+    // let mut c_init = Expr::Seq {
+    //     exprs: vec![
+    //         Expr::Ass { lv: y1, rv: p1y1 },
+    //         Expr::Ass { lv: y2, rv: p2y2 },
+    //         Expr::Ass { lv: y3, rv: p3y3 },
+    //     ],
+    // };
     let w = Expr::While {
         guard: Pred::new(Poly::from((vec![Mon::from((y3, &r))], &r)), false),
         c: Box::new(c_if),
     };
     let c = Expr::Seq {
-        exprs: vec![c_init, w],
+        exprs: vec![
+            Expr::Ass { lv: y1, rv: p1y1 },
+            Expr::Ass { lv: y2, rv: p2y2 },
+            Expr::Ass { lv: y3, rv: p3y3 },
+            w,
+        ],
     };
+    let g = Temp::most_gen(2, &r);
+    // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    let c = c.add(Constraint(i, PIdeal::zero(&r)));
+    for Constraint(i1, i2) in &c.items {
+        println!("i1={:?}", i1);
+        println!("i2={:?}", i2);
+    }
+    let le = LinearEquations::from((c, &r));
+    println!("{}", le);
+    match le.solve() {
+        Some(sol) => {
+            for s in &sol {
+                println!("{:?} = {:?}", s.0, s.1);
+            }
+            println!("{:?}", g.subs_pars(sol));
+        }
+        None => println!("Solution dosn't exist"),
+    }
+}
+
+#[test]
+fn mannadiv_parse() {
+    let r = Ring::new();
+    // 最初の代入は, 前のテストと整合性を取るためのもの
+    let c = convert_from_parseresult(
+        &program()
+            .parse(
+                r#"
+                x1 = x1; x2 = x2;
+                y1 = 0;y2 = 0;y3 = x1;
+                while ( y3 != 0 ) {
+                    if ( y2 + 1 == x2 ) {
+                        y1 = y1 + 1;
+                        y2 = 0;
+                        y3 = y3 - 1;
+                    }
+                
+                    else {
+                        y2 = y2 + 1;
+                        y3 = y3 - 1;
+                    }
+                }"#,
+            )
+            .map_or(E::Skip, |(_i, c)| c),
+        &r,
+    );
+    println!("{:?}", c);
+    println!("{:?}", r.borrow().vars);
+
     let g = Temp::most_gen(2, &r);
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
