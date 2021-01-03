@@ -1,6 +1,7 @@
 mod coef;
 mod constraints;
 mod expr;
+mod expr_parse;
 mod mon;
 mod p_comb;
 mod poly;
