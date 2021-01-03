@@ -136,7 +136,7 @@ fn if_cnd<'a>() -> impl Parser<'a, Pre> {
             whitespace_wrap(match_literal("if")),
             whitespace_wrap(match_literal("(")),
         ),
-        left(pred(), match_literal(")")),
+        left(pred(), whitespace_wrap(match_literal(")"))),
     )
 }
 
@@ -235,7 +235,7 @@ fn while_cnd<'a>() -> impl Parser<'a, Pre> {
             whitespace_wrap(match_literal("while")),
             whitespace_wrap(match_literal("(")),
         ),
-        left(pred(), match_literal(")")),
+        left(pred(), whitespace_wrap(match_literal(")"))),
     )
 }
 
@@ -282,7 +282,7 @@ fn expr<'a>() -> impl Parser<'a, E> {
     )
 }
 
-fn program<'a>() -> impl Parser<'a, E> {
+pub fn program<'a>() -> impl Parser<'a, E> {
     zero_or_more(whitespace_wrap(expr())).map(move |es| {
         if es.len() == 0 {
             E::Skip
