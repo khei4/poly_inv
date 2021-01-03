@@ -190,7 +190,7 @@ fn term_parser() {
     );
 }
 
-fn poly<'a>() -> impl Parser<'a, P> {
+pub fn poly<'a>() -> impl Parser<'a, P> {
     term().and_then(|val| {
         zero_or_more(pair(
             whitespace_wrap(any_char.pred(|c| *c == '+' || *c == '-')),
