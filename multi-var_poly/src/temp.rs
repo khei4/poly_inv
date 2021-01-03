@@ -2,7 +2,6 @@ use super::coef::*;
 use super::mon::*;
 use super::poly::*;
 use super::ring::*;
-use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::collections::HashMap;
