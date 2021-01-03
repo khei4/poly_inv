@@ -3,12 +3,15 @@ use super::p_comb::*;
 use super::poly::*;
 use super::ring::*;
 
-// poly := term ('+' term | '-' term)*
-// term := factor ('*' factor)*
-// factor := value ('^' number)*
-// value :=
-// number
-
+// poly := term ('+' term | '-' term)*;
+// term := factor ('*' factor)*;
+// factor := unary ('^' number)*;
+// unary := ('+'|'-')* primary;
+// primary := number | var | '(' poly ')';
+// number := digit+;
+// var := letter ( letter | digit )*;
+// letter = ("a" | "b" | ... | "z" | "A" | ... | "Z");
+// digit = "0" | "1" | "2" | ... | "9";
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum P {
     Add { exp1: Box<P>, exp2: Box<P> },
