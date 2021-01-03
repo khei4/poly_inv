@@ -5,9 +5,8 @@ use super::ring::*;
 // 代入するだけで, 多項式に現れない変数はみない
 
 // BNF
-// program := stmt*;
-// stmd := expr ';';
-// expr := assign | if_stmt | while_stmt | "skip";
+// program := expr*;
+// expr := assign ';' | if_stmt | while_stmt | "skip" ';';
 // assign := var '=' poly;
 // if_stmt := "if" '(' pred ')' '{' stmt* '}' ("else" '{' stmt* '}')?;
 // while_stmt := "while" '(' pred ')' '{' stmt* '}';
@@ -229,18 +228,61 @@ fn if_parser() {
     );
 }
 
+fn while_cnd<'a>() -> impl Parser<'a, Pre> {
+    right(
+        pair(
+            whitespace_wrap(match_literal("while")),
+            whitespace_wrap(match_literal("(")),
+        ),
+        left(pred(), match_literal(")")),
+    )
+}
+
+fn while_stmt<'a>() -> impl Parser<'a, E> {
+    while_cnd().and_then(|pred| {
+        nested_program().map(move |c| E::While {
+            guard: pred.clone(),
+            body: Box::new(c),
+        })
+    })
+}
+
+#[test]
+fn while_parser() {
+    let expected = E::While {
+        guard: Pre {
+            p: P::Sub {
+                exp1: Box::new(P::Num(0)),
+                exp2: Box::new(P::Num(0)),
+            },
+            eq: true,
+        },
+        body: Box::new(E::Ass {
+            v: V("x1".to_string()),
+            p: P::Num(0),
+        }),
+    };
+    assert_eq!(
+        Ok(("", expected)),
+        while_stmt().parse("while (0 == 0) { x1 = 0; }")
+    );
+}
+
 fn skip<'a>() -> impl Parser<'a, E> {
     match_literal("skip").map(|()| E::Skip)
 }
 fn expr<'a>() -> impl Parser<'a, E> {
-    either(assign(), skip())
+    either(
+        left(assign(), match_literal(";")),
+        either(
+            if_stmt(),
+            either(while_stmt(), left(skip(), match_literal(";"))),
+        ),
+    )
 }
 
-fn stmt<'a>() -> impl Parser<'a, E> {
-    left(expr(), match_literal(";"))
-}
 fn program<'a>() -> impl Parser<'a, E> {
-    zero_or_more(stmt()).map(move |es| {
+    zero_or_more(whitespace_wrap(expr())).map(move |es| {
         if es.len() == 0 {
             E::Skip
         } else if es.len() == 1 {
@@ -251,25 +293,105 @@ fn program<'a>() -> impl Parser<'a, E> {
     })
 }
 
-// fn term<'a>() -> impl Parser<'a, P> {
-//     factor().and_then(|val| {
-//         zero_or_more(right(whitespace_wrap(match_literal("*")), factor())).map(
-//             move |mut factors| {
-//                 if factors.len() == 0 {
-//                     // closureのmove, borrowingまったくわかってない...
-//                     val.clone()
-//                 } else {
-//                     let mut res = val.clone();
-//                     factors.reverse();
-//                     while let Some(f) = factors.pop() {
-//                         res = P::Mul {
-//                             exp1: Box::new(res),
-//                             exp2: Box::new(f),
-//                         };
-//                     }
-//                     res
-//                 }
-//             },
-//         )
-//     })
-// }
+#[test]
+fn p_program_parser() {
+    let c_then = E::Seq {
+        es: vec![
+            E::Ass {
+                v: V("y1".to_string()),
+                p: P::Add {
+                    exp1: Box::new(P::Var("y1".to_string())),
+                    exp2: Box::new(P::Num(1)),
+                },
+            },
+            E::Ass {
+                v: V("y2".to_string()),
+                p: P::Num(0),
+            },
+            E::Ass {
+                v: V("y3".to_string()),
+                p: P::Sub {
+                    exp1: Box::new(P::Var("y3".to_string())),
+                    exp2: Box::new(P::Num(1)),
+                },
+            },
+        ],
+    };
+    let c_else = E::Seq {
+        es: vec![
+            E::Ass {
+                v: V("y2".to_string()),
+                p: P::Add {
+                    exp1: Box::new(P::Var("y2".to_string())),
+                    exp2: Box::new(P::Num(1)),
+                },
+            },
+            E::Ass {
+                v: V("y3".to_string()),
+                p: P::Sub {
+                    exp1: Box::new(P::Var("y3".to_string())),
+                    exp2: Box::new(P::Num(1)),
+                },
+            },
+        ],
+    };
+    let c_while = E::While {
+        guard: Pre {
+            p: P::Sub {
+                exp1: Box::new(P::Var("y3".to_string())),
+                exp2: Box::new(P::Num(0)),
+            },
+            eq: false,
+        },
+        body: Box::new(E::If {
+            guard: Pre {
+                p: P::Sub {
+                    exp1: Box::new(P::Add {
+                        exp1: Box::new(P::Var("y2".to_string())),
+                        exp2: Box::new(P::Num(1)),
+                    }),
+                    exp2: Box::new(P::Var("x2".to_string())),
+                },
+                eq: true,
+            },
+            the: Box::new(c_then),
+            els: Some(Box::new(c_else)),
+        }),
+    };
+    let expected = E::Seq {
+        es: vec![
+            E::Ass {
+                v: V("y1".to_string()),
+                p: P::Num(0),
+            },
+            E::Ass {
+                v: V("y2".to_string()),
+                p: P::Num(0),
+            },
+            E::Ass {
+                v: V("y3".to_string()),
+                p: P::Var("x1".to_string()),
+            },
+            c_while,
+        ],
+    };
+    assert_eq!(
+        Ok(("", expected)),
+        program().parse(
+            r#"
+            y1 = 0;y2 = 0;y3 = x1;
+            while(y3 != 0) {
+                if (y2 + 1 == x2) {
+                    y1 = y1 + 1;
+                    y2 = 0;
+                    y3 = y3 - 1;
+                }
+            
+                else {
+                    y2 = y2 + 1;
+                    y3 = y3 - 1;
+                }
+            }"#
+        )
+    );
+}
