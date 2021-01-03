@@ -157,29 +157,25 @@ impl Temp {
             .map(|(v, _s)| v)
             .collect();
         let mut cnt = r.borrow().pars.len();
-        let mut fresh_pars = vec![];
-        let mut mons = vec![];
-        for i in 0..d + 1 {
-            for c in v.iter().combinations_with_replacement(i) {
-                // これはケッコーやばい
-                let fp = Par::new(cnt);
-                cnt += 1;
-                fresh_pars.push(fp);
-                let mut m: std::collections::HashMap<Var, usize> = std::collections::HashMap::new();
-                for v in c {
-                    match m.get_mut(&v) {
-                        Some(d) => *d += 1,
-                        None => {
-                            m.insert(*v, 1);
-                        }
-                    }
-                }
-                mons.push(Reverse(Mon::<LinExp>::from((fp, m, r))))
-            }
+        let mut dummy_poly = Poly::one(r);
+        for (v, _s) in &r.borrow().vars {
+            dummy_poly += Poly::from((*v, r));
         }
+        dummy_poly = dummy_poly.pow(d);
+        let mut res = Temp::zero(r);
+        let mut fresh_pars = vec![];
+        // これをすると, 定数項からIndexがついていく
+        while let Some(Reverse(m)) = dummy_poly.mons.pop() {
+            let fp = Par::new(cnt);
+            cnt += 1;
+            let new_m = Mon::from((fp, m.vars, r));
+            fresh_pars.push(fp);
+            res.mons.push(Reverse(new_m));
+        }
+        // ソートは別にしなくていいんだけどね(popじゃなくて順番を管理すればよい)
         r.borrow_mut().pextend(fresh_pars);
-        mons.sort();
-        Temp { mons, r: r.clone() }
+        res.sort_sumup();
+        res
     }
 
     pub fn rem_par(&self, other: Poly) -> Temp {
