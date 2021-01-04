@@ -2,6 +2,7 @@ use super::coef::*;
 use super::mon::*;
 use super::poly::*;
 use super::ring::*;
+use itertools::Itertools;
 use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::collections::HashMap;
@@ -176,6 +177,40 @@ impl Temp {
         res.sort_sumup();
         res
     }
+    // randomized version
+    // pub fn most_gen(d: usize, r: &Rc<RefCell<Ring>>) -> Temp {
+    //     let v: Vec<Var> = r
+    //         .borrow()
+    //         .vars
+    //         .clone()
+    //         .into_iter()
+    //         .map(|(v, _s)| v)
+    //         .collect();
+    //     let mut cnt = r.borrow().pars.len();
+    //     let mut fresh_pars = vec![];
+    //     let mut mons = vec![];
+    //     for i in 0..d + 1 {
+    //         for c in v.iter().combinations_with_replacement(i) {
+    //             // これはケッコーやばい
+    //             let fp = Par::new(cnt);
+    //             cnt += 1;
+    //             fresh_pars.push(fp);
+    //             let mut m: std::collections::HashMap<Var, usize> = std::collections::HashMap::new();
+    //             for v in c {
+    //                 match m.get_mut(&v) {
+    //                     Some(d) => *d += 1,
+    //                     None => {
+    //                         m.insert(*v, 1);
+    //                     }
+    //                 }
+    //             }
+    //             mons.push(Reverse(Mon::<LinExp>::from((fp, m, r))))
+    //         }
+    //     }
+    //     r.borrow_mut().pextend(fresh_pars);
+    //     mons.sort();
+    //     Temp { mons, r: r.clone() }
+    // }
 
     pub fn rem_par(&self, other: Poly) -> Temp {
         let diff = self.tdeg() - other.tdeg();

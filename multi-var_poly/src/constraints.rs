@@ -289,7 +289,7 @@ impl std::fmt::Display for LinearEquations {
                 } else {
                     term = format!("{}{:?}", outvec[i], Par::new(i));
                 }
-                res = format!("{}{:^5}", res, term);
+                res = format!("{}{:^6}", res, term);
             }
             res = format!("{}=  {}  \n", res, c);
         }
