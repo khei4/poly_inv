@@ -343,8 +343,10 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 impl LinearEquations {
     pub fn solve(&self) -> Option<Vec<(Par, LinExp)>> {
         // 行列を作る. 縦のインデックスは, setのcollectによせる
-        let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); self.parsize]; self.eqs.len()];
-        let mut b: Vec<C> = vec![C::zero(); self.eqs.len()];
+        let row_num = std::cmp::max(self.eqs.len(), self.parsize);
+        let col_num = self.parsize;
+        let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); col_num]; row_num];
+        let mut b: Vec<C> = vec![C::zero(); row_num];
         let rows: Vec<(LinExp, C)> = self.eqs.clone().into_iter().collect();
         for i in 0..rows.len() {
             for pt in &rows[i].0.terms {
@@ -363,7 +365,7 @@ impl LinearEquations {
             // pivoting
             let mut max_i = cur;
             let mut max_v = mat[cur][k];
-            for l in cur..self.eqs.len() {
+            for l in cur..row_num {
                 if mat[l][k] != C::zero() && (max_v < mat[l][k] || max_v == C::zero()) {
                     max_i = l;
                     max_v = mat[l][k];
@@ -375,9 +377,10 @@ impl LinearEquations {
             if mat[cur][k].is_zero() {
                 continue;
             } else {
-                for i in cur + 1..self.eqs.len() {
+                for i in cur + 1..row_num {
                     let m = mat[i][k] / mat[cur][k];
-                    for j in k..self.parsize {
+                    // 打ち消しをしている
+                    for j in k..col_num {
                         let t = m * mat[cur][j];
                         mat[i][j] -= t;
                     }
@@ -389,7 +392,7 @@ impl LinearEquations {
         }
 
         // Debug
-        for i in 0..self.eqs.len() {
+        for i in 0..row_num {
             for j in 0..self.parsize {
                 print!("{:^3} ", mat[i][j]);
             }
@@ -406,25 +409,29 @@ impl LinearEquations {
             .collect();
 
         // bacword
-        for k in (0..self.parsize).rev() {
+        // 正方の分しか求まらない
+        println!("{:?}", "back");
+        for k in (0..col_num).rev() {
             // tarは, 求まる変数
             let mut c = mat[k][k];
+            // 陽に解ける変数のIndex
             let mut tar = k;
-            for i in k..self.parsize {
+            // k行から非ゼロを見つける
+            for i in k..col_num {
                 if !mat[k][i].is_zero() {
                     c = mat[k][i];
                     tar = i;
                     break;
                 }
             }
+
             if c == C::zero() {
                 if !b[k].is_zero() {
                     return None;
                 }
                 continue;
             } else {
-                // 解ける時
-                let mut a = LinExp::one() * (b[tar] / c);
+                let mut a = LinExp::one() * (b[k] / c);
                 for i in tar + 1..self.parsize {
                     a += -res[i].1.clone() * (mat[k][i] / c);
                 }
@@ -446,12 +453,16 @@ fn zero_and_mostgen() {
     r.borrow_mut().vextend(String::from("x2"));
     let x2 = Var::new(2);
     let vars = vec![x0, x1, x2];
-    let i = PIdeal::most_gen(1, &r);
+    let g = Temp::most_gen(1, &r);
+    let i = PIdeal::from(g.clone());
 
     let mut a0x0: Mon<LinExp> = Mon::from((Par::new(0), vec![(x0, 1)], &r));
-    a0x0.coef += LinExp::one();
+    a0x0.coef += LinExp::one() + LinExp::from(Par::new(3));
     let mut a1x1: Mon<LinExp> = Mon::from((Par::new(1), vec![(x1, 1)], &r));
-    a1x1.coef += LinExp::one() * (C::one() * 8);
+    a1x1.coef += LinExp::one() * (C::one() * 8)
+        + LinExp::from(Par::new(4))
+        + LinExp::from(Par::new(5))
+        + LinExp::from(Par::new(6));
     // どうも今の実装だと, remparが毎回インデックス付けが変わるらしい
     let a2x2: Mon<LinExp> = Mon::from((Par::new(2), vec![(x2, 1)], &r));
     let t = Temp::from((vec![a0x0, a1x1, a2x2], &r));
@@ -464,13 +475,47 @@ fn zero_and_mostgen() {
     let leq = LinearEquations::from((c, &r));
     println!("{}", "===== solve these equations =====");
     println!("{}", leq);
+    let inv;
+    let mut pars: HashSet<Par> = HashSet::new();
+    // 解のパラメーターを集める
     match leq.solve() {
         Some(sol) => {
             println!("{}", "===== solutions =====");
-            for s in sol {
+            for s in &sol {
                 println!("{:?} = {:?}", s.0, s.1);
             }
+            println!(
+                "{}",
+                "===== substitute solutions to generic templates ====="
+            );
+            pars.extend(
+                sol.clone()
+                    .into_iter()
+                    .filter(|(_p, le)| !le.is_cnst() && le.terms.len() == 1)
+                    .map(|(_p, le)| match le.terms[0].par {
+                        Some(p) => p,
+                        None => unreachable!(),
+                    })
+                    .collect::<HashSet<Par>>(),
+            );
+            inv = g.subs_pars(sol);
+            println!("{:?}", inv);
         }
-        None => println!("Solution dosn't exist"),
+        None => {
+            println!("Solution dosn't exist");
+            unimplemented!()
+        }
+    }
+    println!("{:?}", pars);
+    // orthogonal components
+    for p in &pars {
+        let mut e: Vec<(Par, LinExp)> = vec![];
+        e.push((*p, LinExp::one()));
+        for other_p in &pars {
+            if p != other_p {
+                e.push((*other_p, LinExp::zero()));
+            }
+        }
+        println!("{:?}", inv.clone().subs_pars(e.clone()));
     }
 }
