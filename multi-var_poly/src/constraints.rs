@@ -455,16 +455,18 @@ fn zero_and_mostgen() {
     // どうも今の実装だと, remparが毎回インデックス付けが変わるらしい
     let a2x2: Mon<LinExp> = Mon::from((Par::new(2), vec![(x2, 1)], &r));
     let t = Temp::from((vec![a0x0, a1x1, a2x2], &r));
-    println!("{:?}", t);
-    println!("{:?}", i.gens);
+    println!("g1 = {:?}", t);
+    println!("g2 = {:?}", i.gens);
     let eq_cons = Constraint(i, PIdeal::from(t));
     let mut c = Cs::new();
     c = c.add(eq_cons);
 
     let leq = LinearEquations::from((c, &r));
+    println!("{}", "===== solve these equations =====");
     println!("{}", leq);
     match leq.solve() {
         Some(sol) => {
+            println!("{}", "===== solutions =====");
             for s in sol {
                 println!("{:?} = {:?}", s.0, s.1);
             }

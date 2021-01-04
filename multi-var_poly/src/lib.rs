@@ -223,17 +223,25 @@ fn mannadiv() {
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let c = c.add(Constraint(i, PIdeal::zero(&r)));
+    println!("{}", "target ideals");
     for Constraint(i1, i2) in &c.items {
         println!("i1={:?}", i1);
         println!("i2={:?}", i2);
     }
     let le = LinearEquations::from((c, &r));
+    println!("{}", "===== solve these equations =====");
     println!("{}", le);
+
     match le.solve() {
         Some(sol) => {
+            println!("{}", "===== solutions =====");
             for s in &sol {
                 println!("{:?} = {:?}", s.0, s.1);
             }
+            println!(
+                "{}",
+                "===== substitute solutions to generic templates ====="
+            );
             println!("{:?}", g.subs_pars(sol));
         }
         None => println!("Solution dosn't exist"),
@@ -266,24 +274,33 @@ fn mannadiv_parse() {
             .map_or(E::Skip, |(_i, c)| c),
         &r,
     );
-    println!("{:?}", c);
-    println!("{:?}", r.borrow().vars);
+    // println!("{:?}", c);
+    // println!("{:?}", r.borrow().vars);
 
     let g = Temp::most_gen(2, &r);
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    // let (i, c) = gen_con_less_precise(&c, PIdeal::from(g.clone()), Cs::new());
     let c = c.add(Constraint(i, PIdeal::zero(&r)));
+    println!("{}", "target ideals");
     for Constraint(i1, i2) in &c.items {
         println!("i1={:?}", i1);
         println!("i2={:?}", i2);
     }
     let le = LinearEquations::from((c, &r));
+    println!("{}", "===== solve these equations =====");
     println!("{}", le);
+
     match le.solve() {
         Some(sol) => {
+            println!("{}", "===== solutions =====");
             for s in &sol {
                 println!("{:?} = {:?}", s.0, s.1);
             }
+            println!(
+                "{}",
+                "===== substitute solutions to generic templates ====="
+            );
             println!("{:?}", g.subs_pars(sol));
         }
         None => println!("Solution dosn't exist"),
