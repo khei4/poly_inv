@@ -51,7 +51,7 @@ impl PIdeal {
 
 impl PIdeal {
     fn union(mut self, other: PIdeal) -> PIdeal {
-        self.gens.union(&other.gens);
+        self.gens.extend(other.gens);
         self
     }
 
@@ -166,15 +166,15 @@ pub fn gen_con_less_precise(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, 
         Expr::Skip => (ideal, c),
         Expr::Seq { exprs } => {
             for i in (0..exprs.len()).rev() {
-                let next_ic = gen_con(&exprs[i], ideal, c);
+                let next_ic = gen_con_less_precise(&exprs[i], ideal, c);
                 ideal = next_ic.0;
                 c = next_ic.1;
             }
             (ideal, c)
         }
         Expr::If { guard, the, els } => {
-            let (i1, c1) = gen_con(the, ideal.clone(), c.clone());
-            let (i2, c2) = gen_con(els, ideal, c);
+            let (i1, c1) = gen_con_less_precise(the, ideal.clone(), c.clone());
+            let (i2, c2) = gen_con_less_precise(els, ideal, c);
             match guard {
                 Pred { p, eq } if *eq => {
                     let i1remp = i1.rem_par(p);
@@ -187,7 +187,7 @@ pub fn gen_con_less_precise(e: &Expr, mut ideal: PIdeal, mut c: Cs) -> (PIdeal, 
             }
         }
         Expr::While { c: body, .. } => {
-            let (i1, c1) = gen_con(body, ideal.clone(), c.clone());
+            let (i1, c1) = gen_con_less_precise(body, ideal.clone(), c.clone());
             c = c.add(Constraint(ideal.clone(), i1));
             (ideal, c.union(c1))
         }
@@ -343,8 +343,8 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 impl LinearEquations {
     pub fn solve(&self) -> Option<Vec<(Par, LinExp)>> {
         // 行列を作る. 縦のインデックスは, setのcollectによせる
-        let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); self.parsize]; self.parsize];
-        let mut b: Vec<C> = vec![C::zero(); self.parsize];
+        let mut mat: Vec<Vec<C>> = vec![vec![C::zero(); self.parsize]; self.eqs.len()];
+        let mut b: Vec<C> = vec![C::zero(); self.eqs.len()];
         let rows: Vec<(LinExp, C)> = self.eqs.clone().into_iter().collect();
         for i in 0..rows.len() {
             for pt in &rows[i].0.terms {
@@ -363,7 +363,7 @@ impl LinearEquations {
             // pivoting
             let mut max_i = cur;
             let mut max_v = mat[cur][k];
-            for l in cur..self.parsize {
+            for l in cur..self.eqs.len() {
                 if mat[l][k] != C::zero() && (max_v < mat[l][k] || max_v == C::zero()) {
                     max_i = l;
                     max_v = mat[l][k];
@@ -375,7 +375,7 @@ impl LinearEquations {
             if mat[cur][k].is_zero() {
                 continue;
             } else {
-                for i in cur + 1..self.parsize {
+                for i in cur + 1..self.eqs.len() {
                     let m = mat[i][k] / mat[cur][k];
                     for j in k..self.parsize {
                         let t = m * mat[cur][j];
@@ -389,12 +389,12 @@ impl LinearEquations {
         }
 
         // Debug
-        // for i in 0..self.parsize {
-        //     for j in 0..self.parsize {
-        //         print!("{:^3} ", mat[i][j]);
-        //     }
-        //     println!("={}", b[i]);
-        // }
+        for i in 0..self.eqs.len() {
+            for j in 0..self.parsize {
+                print!("{:^3} ", mat[i][j]);
+            }
+            println!("={}", b[i]);
+        }
         let mut res: Vec<(Par, LinExp)> = (0..self.parsize)
             .rev()
             .map(|i| {
