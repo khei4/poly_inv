@@ -220,8 +220,8 @@ fn mannadiv() {
         ],
     };
     let g = Temp::most_gen(2, &r);
+    let (i, c) = gen_con_less_precise(&c, PIdeal::from(g.clone()), Cs::new());
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
-    let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let c = c.add(Constraint(i, PIdeal::zero(&r)));
     println!("{}", "target ideals");
     for Constraint(i1, i2) in &c.items {
@@ -264,7 +264,6 @@ fn mannadiv_parse() {
                         y2 = 0;
                         y3 = y3 - 1;
                     }
-                
                     else {
                         y2 = y2 + 1;
                         y3 = y3 - 1;
@@ -279,8 +278,8 @@ fn mannadiv_parse() {
 
     let g = Temp::most_gen(2, &r);
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
-    // let (i, c) = gen_con_less_precise(&c, PIdeal::from(g.clone()), Cs::new());
     let c = c.add(Constraint(i, PIdeal::zero(&r)));
     println!("{}", "target ideals");
     for Constraint(i1, i2) in &c.items {
@@ -304,5 +303,85 @@ fn mannadiv_parse() {
             println!("{:?}", g.subs_pars(sol));
         }
         None => println!("Solution dosn't exist"),
+    }
+}
+
+#[test]
+fn c_fall() {
+    let r = Ring::new();
+    let c = convert_from_parseresult(
+        &program()
+            .parse(
+                r#"
+                x = x0; v = v0; t = t0;
+                while (t - a != 0) {
+                    x = x + v * dt;
+                    v = v - g * dt;
+                    t = t + dt;
+                }
+                "#,
+            )
+            .map_or(E::Skip, |(_i, c)| c),
+        &r,
+    );
+    // println!("{:?}", c);
+    // println!("{:?}", r.borrow().vars);
+
+    let g = Temp::most_gen(3, &r);
+    // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
+    let c = c.add(Constraint(i, PIdeal::zero(&r)));
+    println!("{}", "target ideals");
+    for Constraint(i1, i2) in &c.items {
+        println!("i1={:?}", i1);
+        println!("i2={:?}", i2);
+    }
+    let le = LinearEquations::from((c, &r));
+    println!("{}", "===== solve these equations =====");
+    println!("{}", le);
+    use std::collections::HashSet;
+    let inv;
+    let mut pars: HashSet<Par> = HashSet::new();
+    // 解のパラメーターを集める
+    match le.solve() {
+        Some(sol) => {
+            println!("{}", "===== solutions =====");
+            for s in &sol {
+                println!("{:?} = {:?}", s.0, s.1);
+            }
+            println!(
+                "{}",
+                "===== substitute solutions to generic templates ====="
+            );
+            pars.extend(
+                sol.clone()
+                    .into_iter()
+                    .filter(|(_p, le)| !le.is_cnst() && le.terms.len() == 1)
+                    .map(|(_p, le)| match le.terms[0].par {
+                        Some(p) => p,
+                        None => unreachable!(),
+                    })
+                    .collect::<HashSet<Par>>(),
+            );
+            inv = g.subs_pars(sol);
+            println!("{:?}", inv);
+        }
+        None => {
+            println!("Solution dosn't exist");
+            unimplemented!()
+        }
+    }
+    println!("{:?}", pars);
+    // orthogonal components
+    for p in &pars {
+        let mut e: Vec<(Par, LinExp)> = vec![];
+        e.push((*p, LinExp::one()));
+        for other_p in &pars {
+            if p != other_p {
+                e.push((*other_p, LinExp::zero()));
+            }
+        }
+        println!("{:?}", inv.clone().subs_pars(e.clone()));
     }
 }
