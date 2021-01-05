@@ -341,6 +341,7 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 }
 
 impl LinearEquations {
+    // TODO: 一部の連立方程式がうまくとけない
     pub fn solve(&self) -> Option<Vec<(Par, LinExp)>> {
         // 行列を作る. 縦のインデックスは, setのcollectによせる
         let row_num = std::cmp::max(self.eqs.len(), self.parsize);
@@ -410,7 +411,6 @@ impl LinearEquations {
 
         // bacword
         // 正方の分しか求まらない
-        println!("{:?}", "back");
         for k in (0..col_num).rev() {
             // tarは, 求まる変数
             let mut c = mat[k][k];
