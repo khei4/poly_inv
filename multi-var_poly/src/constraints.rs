@@ -342,6 +342,8 @@ impl From<(Cs, &Rc<RefCell<Ring>>)> for LinearEquations {
 
 impl LinearEquations {
     // TODO: 一部の連立方程式がうまくとけない
+    // 求めた解が元の等式を満たすかチェックをする.
+    // カーネルの次元を計算する(階段の数と変数の数を見る)
     pub fn solve(&self) -> Option<Vec<(Par, LinExp)>> {
         // 行列を作る. 縦のインデックスは, setのcollectによせる
         let row_num = std::cmp::max(self.eqs.len(), self.parsize);
@@ -380,7 +382,6 @@ impl LinearEquations {
             } else {
                 for i in cur + 1..row_num {
                     let m = mat[i][k] / mat[cur][k];
-                    // 打ち消しをしている
                     for j in k..col_num {
                         let t = m * mat[cur][j];
                         mat[i][j] -= t;
@@ -391,6 +392,8 @@ impl LinearEquations {
                 cur += 1;
             }
         }
+        //  Image dimension
+        let mut i_dim = cur;
 
         // Debug
         for i in 0..row_num {
@@ -430,16 +433,37 @@ impl LinearEquations {
                     return None;
                 }
                 continue;
-            } else {
-                let mut a = LinExp::one() * (b[k] / c);
-                for i in tar + 1..self.parsize {
-                    a += -res[i].1.clone() * (mat[k][i] / c);
-                }
-                res[tar].1 = a;
             }
+
+            i_dim -= 1;
+            let mut a = LinExp::one() * (b[k] / c);
+            for i in tar + 1..self.parsize {
+                a += -res[i].1.clone() * (mat[k][i] / c);
+            }
+            res[tar].1 = a;
         }
+
+        assert!(i_dim == 0);
         res.sort_by(|e1, e2| e1.0.cmp(&e2.0));
         Some(res)
+    }
+
+    pub fn check(&self, sol: &Vec<(Par, LinExp)>) {
+        use std::collections::HashMap;
+        let sol_map = sol.clone().into_iter().collect::<HashMap<Par, LinExp>>();
+        // 各単項式の
+        let mut res_mons: Vec<Mon<LinExp>> = vec![];
+        for (le, c) in &self.eqs {
+            let mut new_linexp = LinExp::zero();
+            for pt in &le.terms {
+                match pt.par {
+                    Some(p) => new_linexp += sol_map[&p].clone() * pt.coef,
+                    None => new_linexp += LinExp::one() * pt.coef,
+                }
+            }
+            assert!(new_linexp.terms.len() == 1);
+            assert!(new_linexp.terms[0].coef == *c);
+        }
     }
 }
 #[test]
@@ -480,6 +504,7 @@ fn zero_and_mostgen() {
     // 解のパラメーターを集める
     match leq.solve() {
         Some(sol) => {
+            leq.check(&sol);
             println!("{}", "===== solutions =====");
             for s in &sol {
                 println!("{:?} = {:?}", s.0, s.1);
@@ -503,7 +528,7 @@ fn zero_and_mostgen() {
         }
         None => {
             println!("Solution dosn't exist");
-            unimplemented!()
+            std::process::exit(0);
         }
     }
     println!("{:?}", pars);
