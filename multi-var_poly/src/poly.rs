@@ -126,6 +126,7 @@ impl Poly {
             base *= base.clone();
             e >>= 1;
         }
+        res.sort_sumup();
         res
     }
 }

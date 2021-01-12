@@ -325,9 +325,7 @@ fn c_fall() {
     );
     // println!("{:?}", c);
     // println!("{:?}", r.borrow().vars);
-
     let g = Temp::most_gen(3, &r);
-    // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     // let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let (i, c) = gen_con(&c, PIdeal::from(g.clone()), Cs::new());
     let c = c.add(Constraint(i, PIdeal::zero(&r)));
@@ -339,11 +337,9 @@ fn c_fall() {
     let le = LinearEquations::from((c, &r));
     println!("{}", "===== solve these equations =====");
     println!("{}", le);
-    use std::collections::HashSet;
-    let inv;
-    let mut pars: HashSet<Par> = HashSet::new();
     // parameter の集め方が間違っていたらしい
-    // 乗算の自由度と, 最終的なInvariantの自由度は別
+    // 乗算の自由度と, 最終的なInvariantの自由度は別??
+    let inv;
     match le.solve() {
         Some(sol) => {
             le.check(&sol);
@@ -355,16 +351,6 @@ fn c_fall() {
                 "{}",
                 "===== substitute solutions to generic templates ====="
             );
-            pars.extend(
-                sol.clone()
-                    .into_iter()
-                    .filter(|(_p, le)| !le.is_cnst() && le.terms.len() == 1)
-                    .map(|(_p, le)| match le.terms[0].par {
-                        Some(p) => p,
-                        None => unreachable!(),
-                    })
-                    .collect::<HashSet<Par>>(),
-            );
             inv = g.subs_pars(sol);
             println!("{:?}", inv);
         }
@@ -373,8 +359,9 @@ fn c_fall() {
             std::process::exit(0);
         }
     }
-    println!("{:?}", pars);
     // orthogonal components
+    let pars = inv.get_pars();
+    println!("{:?}", pars);
     for p in &pars {
         let mut e: Vec<(Par, LinExp)> = vec![];
         e.push((*p, LinExp::one()));
